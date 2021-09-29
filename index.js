@@ -1452,6 +1452,7 @@ var auth={
 		if(typeof(VK)==='undefined')
 		{		
 			auth.process_results();	
+			console.log(`Вконтакте вообще не определен`);
 		}
 		else
 		{
@@ -1474,7 +1475,8 @@ var auth={
 								my_data.pic_url = data.response[0].photo_100;
 								
 							}	
-
+							
+							console.log(`Получены данные игрока от яндекса имя:${my_data.name}\nid:${my_data.uid}\npic_url:${my_data.pic_url}`);
 							auth.process_results();	
 						}
 					)
@@ -1483,7 +1485,8 @@ var auth={
 				
 				//функция неудачной инициализации вконтакте
 				function()
-				{					
+				{	
+					console.log(`Ошибка VK.init`);
 					auth.process_results();				
 				},
 
