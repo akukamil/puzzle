@@ -1769,6 +1769,14 @@ function init_game_env() {
 		make_text(objects.id_name,my_data.name,150);
 		any_dialog_active=0;		
 		
+		return new Promise((resolve, reject) => {
+			setTimeout(resolve, 1500);
+		});
+		
+	}).then(()=>{
+		
+		anim.add_pos({obj: objects.id_cont,param: 'y',vis_on_end: false,func: 'easeOutBack',val: ['x',-200],	speed: 0.03});
+		
 	})
 		
 
