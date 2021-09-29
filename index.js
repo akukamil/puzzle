@@ -1332,6 +1332,20 @@ var auth={
 			
 	init: function() {
 		
+		//инициируем файербейс
+		if (firebase.apps.length===0) {
+			firebase.initializeApp({
+				apiKey: "AIzaSyDUYz_Rylw18_CG5Oiop8fb6OYpUaR3FKw",
+				authDomain: "puzzle-db6c5.firebaseapp.com",
+				databaseURL: "https://puzzle-db6c5-default-rtdb.europe-west1.firebasedatabase.app",
+				projectId: "puzzle-db6c5",
+				storageBucket: "puzzle-db6c5.appspot.com",
+				messagingSenderId: "362880721960",
+				appId: "1:362880721960:web:77016026f53c967b84011d"
+			});		
+		}
+	
+		
 		let s = window.location.href;
 
 		//-----------ЯНДЕКС------------------------------------
@@ -1405,8 +1419,8 @@ var auth={
 				
 			}).catch((err)=>{
 				
-				console.log(`Ошибка в яндексе ${err}`);
-				auth.process_results();	
+				//загружаем из локального хранилища
+				auth.local();	
 				
 			})
 		}	
@@ -1435,37 +1449,51 @@ var auth={
 	
 	local: function() {
 		
-		game_platform="local";
+		game_platform="LOCAL";
 				
 		//ищем в локальном хранилище
-		let c_player_uid=localStorage.getItem('uid');
+		let local_uid = localStorage.getItem('uid');
 		
-		if (c_player_uid===undefined || c_player_uid===null) {
+		//здесь создаем нового игрока в локальном хранилище
+		if (local_uid===undefined || local_uid===null) {
 			
-			let rnd_names=["Бегемот","Жираф","Зебра","Тигр","Ослик","Мамонт","Слон","Енот","Кролик","Бизон","Пантера"];
+			let rnd_names=["Бегемот","Жираф","Зебра","Тигр","Ослик","Мамонт","Волк","Лиса","Мышь","Сова","Слон","Енот","Кролик","Бизон","Пантера"];
 			let rnd_num=Math.floor(Math.random()*rnd_names.length)
 			let rand_uid=Math.floor(Math.random() * 99999);
 			
-			my_data.name 	=	rnd_names[rnd_num]+rand_uid;
-			my_data.rating = 1400;
+			my_data.name 		=	rnd_names[rnd_num]+rand_uid;
+			my_data.rating 		= 	1400;
 			my_data.uid			=	"u"+rand_uid;	
 			my_data.pic_url		=	'https://avatars.dicebear.com/v2/male/'+irnd(10,10000)+'.svg';;	
 			
 			localStorage.setItem('uid',my_data.uid);		
-			localStorage.setItem('name',my_data.name);	
-			localStorage.setItem('pic_url',my_data.pic_url);	
+			auth.process_results();
+		}
+		else
+		{
 			
-			auth.process_results();	
+			my_data.uid = local_uid;	
 			
-			return;
-		} 
+			//запрашиваем мою информацию из бд или заносим в бд новые данные если игрока нет в бд
+			firebase.database().ref("players/"+my_data.uid).once('value').then((snapshot) => {		
+							
+				var data=snapshot.val();
+				if (data!==null) {
+					my_data.pic_url = data.pic_url;
+					my_data.name = data.name;
+				}			
+
+			}).catch((error) => {	
+
+
+			}).finally(()=>{
+			
+				auth.process_results();
+			})	
+
+		}
+
 				
-		//это если данные найдены в локальном хранилище
-		my_data.uid = c_player_uid;
-		my_data.name = localStorage.getItem('name');
-		my_data.pic_url = localStorage.getItem('pic_url');
-		
-		auth.process_results();		
 	},
 	
 	unknown: function () {
@@ -1480,51 +1508,18 @@ var auth={
 		
 		console.log("Платформа: "+game_platform)
 					
+					
+		//обновляем полученные данные в файербейс
+		console.log(`Итоговые данные:\nимя:${my_data.name}\nid:${my_data.uid}\npic_url:${my_data.pic_url}`);
+		
+					
 		//загружаем файербейс
-		this.init_firebase();	
+		//this.init_firebase();	
 	
 	},
 	
 	init_firebase: function() {
 		
-		//инициируем файербейс
-		if (firebase.apps.length===0) {
-			firebase.initializeApp({
-				apiKey: "AIzaSyDUYz_Rylw18_CG5Oiop8fb6OYpUaR3FKw",
-				authDomain: "puzzle-db6c5.firebaseapp.com",
-				databaseURL: "https://puzzle-db6c5-default-rtdb.europe-west1.firebasedatabase.app",
-				projectId: "puzzle-db6c5",
-				storageBucket: "puzzle-db6c5.appspot.com",
-				messagingSenderId: "362880721960",
-				appId: "1:362880721960:web:77016026f53c967b84011d"
-			});		
-		}
-	
-		//запрашиваем мою информацию из бд или заносим в бд новые данные если игрока нет в бд
-		firebase.database().ref("players").once('value').then((snapshot) => {		
-						
-			var data=snapshot.val();
-			if (data===null) {
-				//если я первый раз в  игре
-				my_data.rating=1400;	
-			}
-			else {
-				//если база данных вернула данные то все равно проверяем корректность ответа
-				my_data.rating = data.rating || 1400;
-
-			}			
-
-		}).catch((error) => {	
-			console.log("Ошибка файербейс");
-		}).finally(()=>{
-			
-			
-				
-			//обновляем данные в файербейс
-			firebase.database().ref("players/"+my_data.uid).set({name:my_data.name, rating: my_data.rating, pic_url: my_data.pic_url, fp:0, tm:firebase.database.ServerValue.TIMESTAMP});
-		
-			
-		})	
 	
 	}	
 	
