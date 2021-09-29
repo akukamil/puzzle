@@ -1768,7 +1768,6 @@ function init_game_env() {
 		objects.id_cont.visible=true;
 		objects.id_avatar.texture=loader.resources.my_avatar.texture;		
 		make_text(objects.id_name,my_data.name,150);
-		objects.id_name.text=objects.my_card_name.text;	
 		any_dialog_active=0;		
 		
 	})
