@@ -1436,9 +1436,9 @@ var auth={
 				
 				//auth.process_results();		
 				
-			}).catch(()=>{
+			}).catch((err)=>{
 				
-				console.log(`Ошибка в яндексе`);
+				console.log(`Ошибка в яндексе ${err}`);
 				//auth.process_results();	
 				
 			})
