@@ -1432,13 +1432,14 @@ var auth={
 				my_data.uid = _player.getUniqueID().replace(/\//g, "Z");	
 				my_data.pic_url = _player.getPhoto('medium');		
 				
-				console.log(`Получены данные игрока от яндекса ${my_data.name} ${my_data.name} ${my_data.pic_url}`);
+				console.log(`Получены данные игрока от яндекса ${my_data.name} ${my_data.uid} ${my_data.pic_url}`);
 				
-				auth.process_results();		
+				//auth.process_results();		
 				
 			}).catch(()=>{
 				
-				auth.process_results();	
+				console.log(`Ошибка в яндексе`);
+				//auth.process_results();	
 				
 			})
 		}	
