@@ -1301,236 +1301,235 @@ function vis_change() {
 	}	
 }
 
-var auth={
+var auth= new Promise((resolve, reject)=>{
 		
-	// эта функция вызывается один раз в начале игры
-	callback_func: function(){},
-		
-	loadScript : function(src) {
-	  return new Promise((resolve, reject) => {
-		const script = document.createElement('script')
-		script.type = 'text/javascript'
-		script.onload = resolve
-		script.onerror = reject
-		script.src = src
-		document.head.appendChild(script)
-	  })
-	},
-			
-	vkbridge_events: function(e) {
-
-		if (e.detail.type === 'VKWebAppGetUserInfoResult') {
-			
-			my_data.name 	= e.detail.data.first_name + ' ' + e.detail.data.last_name;
-			my_data.uid 	= "vk"+e.detail.data.id;
-			my_data.pic_url = e.detail.data.photo_100;			
-			
-			console.log(`Получены данные игрока от VB MINIAPP:\nимя:${my_data.name}\nid:${my_data.uid}\npic_url:${my_data.pic_url}`);
-			auth.process_results();			
-		}	
-	},
-			
-	init: function(callback) {
-		
-		//это функция которая будет вызвана после загрузки данных игрока
-		this.callback_func=callback;
-		
-		//инициируем файербейс
-		if (firebase.apps.length===0) {
-			firebase.initializeApp({
-				apiKey: "AIzaSyDUYz_Rylw18_CG5Oiop8fb6OYpUaR3FKw",
-				authDomain: "puzzle-db6c5.firebaseapp.com",
-				databaseURL: "https://puzzle-db6c5-default-rtdb.europe-west1.firebasedatabase.app",
-				projectId: "puzzle-db6c5",
-				storageBucket: "puzzle-db6c5.appspot.com",
-				messagingSenderId: "362880721960",
-				appId: "1:362880721960:web:77016026f53c967b84011d"
-			});		
-		}
 	
-		
-		let s = window.location.href;
+	let help_obj = {
+		loadScript : function(src) {
+		  return new Promise((resolve, reject) => {
+			const script = document.createElement('script')
+			script.type = 'text/javascript'
+			script.onload = resolve
+			script.onerror = reject
+			script.src = src
+			document.head.appendChild(script)
+		  })
+		},
+				
+		vkbridge_events: function(e) {
 
-		//-----------ЯНДЕКС------------------------------------
-		if (s.includes("yandex")) {						
-			Promise.all([
-				this.loadScript('https://yandex.ru/games/sdk/v2')
-			]).then(function(){
-				auth.yandex();	
-			});
-			return;
-		}
-		
-		
-		
-		//-----------ВКОНТАКТЕ------------------------------------
-		if (s.includes("vk.com")) {			
-			Promise.all([
-				this.loadScript('https://vk.com/js/api/xd_connection.js?2'),
-				this.loadScript('//ad.mail.ru/static/admanhtml/rbadman-html5.min.js'),
-				this.loadScript('//vk.com/js/api/adman_init.js'),
-				this.loadScript('https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js')	
+			if (e.detail.type === 'VKWebAppGetUserInfoResult') {
 				
-			]).then(function(){
-				auth.vk()
-			});
-			return;
-		}	
-		
-
-		//-----------ЛОКАЛЬНЫЙ СЕРВЕР--------------------------------
-		if (s.includes("192.168")) {			
-			auth.debug();	
-			return;
-		}
-		
-		
-		//-----------НЕИЗВЕСТНОЕ ОКРУЖЕНИЕ---------------------------
-		auth.unknown();
-		
-	},
-	
-	yandex: function() {
-	
-		game_platform="YANDEX";
-		if(typeof(YaGames)==='undefined')
-		{		
-			auth.process_results();	
-		}
-		else
-		{
-			//если sdk яндекса найден
-			YaGames.init({}).then(ysdk => {
+				my_data.name 	= e.detail.data.first_name + ' ' + e.detail.data.last_name;
+				my_data.uid 	= "vk"+e.detail.data.id;
+				my_data.pic_url = e.detail.data.photo_100;			
 				
+				console.log(`Получены данные игрока от VB MINIAPP:\nимя:${my_data.name}\nid:${my_data.uid}\npic_url:${my_data.pic_url}`);
+				help_obj.process_results();			
+			}	
+		},
 				
-				//фиксируем SDK в глобальной переменной
-				window.ysdk=ysdk;				
-				
-				//запрашиваем данные игрока
-				return ysdk.getPlayer();
-				
-				
-			}).then((_player)=>{
-				
-				my_data.name 	= _player.getName();
-				my_data.uid 	= _player.getUniqueID().replace(/\//g, "Z");	
-				my_data.pic_url = _player.getPhoto('medium');		
-				
-				console.log(`Получены данные игрока от яндекса:\nимя:${my_data.name}\nid:${my_data.uid}\npic_url:${my_data.pic_url}`);
-				
-				//если личные данные не получены то берем первые несколько букв айди
-				if (my_data.name=="" || my_data.name=='')
-					my_data.name=my_data.uid.substring(0,5);
-				
-				auth.process_results();		
-				
-			}).catch((err)=>{
-				
-				//загружаем из локального хранилища
-				auth.local();	
-				
-			})
-		}	
-	},
+		init: function() {
 			
-	vk: function() {
+			//инициируем файербейс
+			if (firebase.apps.length===0) {
+				firebase.initializeApp({
+					apiKey: "AIzaSyDUYz_Rylw18_CG5Oiop8fb6OYpUaR3FKw",
+					authDomain: "puzzle-db6c5.firebaseapp.com",
+					databaseURL: "https://puzzle-db6c5-default-rtdb.europe-west1.firebasedatabase.app",
+					projectId: "puzzle-db6c5",
+					storageBucket: "puzzle-db6c5.appspot.com",
+					messagingSenderId: "362880721960",
+					appId: "1:362880721960:web:77016026f53c967b84011d"
+				});		
+			}
 		
-		game_platform="VK";		
-		vkBridge.subscribe((e) => this.vkbridge_events(e)); 
-		vkBridge.send('VKWebAppInit');	
-		vkBridge.send('VKWebAppGetUserInfo');
-		
-	},	
+			
+			let s = window.location.href;
 
-	debug: function() {	
-	
-		game_platform = "debug";
-		let uid = prompt('Отладка. Введите ID', 100);
-		
-		my_data.name = my_data.uid = "debug" + uid;
-		my_data.pic_url = "https://ibb.co/GCW6vg0";	
-		
-		auth.process_results();
+			//-----------ЯНДЕКС------------------------------------
+			if (s.includes("yandex")) {						
+				Promise.all([
+					this.loadScript('https://yandex.ru/games/sdk/v2')
+				]).then(function(){
+					help_obj.yandex();	
+				});
+				return;
+			}
+			
+					
+			//-----------ВКОНТАКТЕ------------------------------------
+			if (s.includes("vk.com")) {			
+				Promise.all([
+					this.loadScript('https://vk.com/js/api/xd_connection.js?2'),
+					this.loadScript('//ad.mail.ru/static/admanhtml/rbadman-html5.min.js'),
+					this.loadScript('//vk.com/js/api/adman_init.js'),
+					this.loadScript('https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js')	
+					
+				]).then(function(){
+					help_obj.vk()
+				});
+				return;
+			}	
+			
 
-	},
-	
-	local: function() {
+			//-----------ЛОКАЛЬНЫЙ СЕРВЕР--------------------------------
+			if (s.includes("192.168")) {			
+				help_obj.debug();	
+				return;
+			}
+					
+			
+			//-----------НЕИЗВЕСТНОЕ ОКРУЖЕНИЕ---------------------------
+			help_obj.unknown();
+			
+			
+			
+		},
 		
-		game_platform="LOCAL";
+		yandex: function() {
+		
+			game_platform="YANDEX";
+			if(typeof(YaGames)==='undefined')
+			{		
+				help_obj.local();	
+			}
+			else
+			{
+				//если sdk яндекса найден
+				YaGames.init({}).then(ysdk => {
+					
+					
+					//фиксируем SDK в глобальной переменной
+					window.ysdk=ysdk;				
+					
+					//запрашиваем данные игрока
+					return ysdk.getPlayer();
+					
+					
+				}).then((_player)=>{
+					
+					my_data.name 	= _player.getName();
+					my_data.uid 	= _player.getUniqueID().replace(/\//g, "Z");	
+					my_data.pic_url = _player.getPhoto('medium');		
+					
+					console.log(`Получены данные игрока от яндекса:\nимя:${my_data.name}\nid:${my_data.uid}\npic_url:${my_data.pic_url}`);
+					
+					//если личные данные не получены то берем первые несколько букв айди
+					if (my_data.name=="" || my_data.name=='')
+						my_data.name=my_data.uid.substring(0,5);
+					
+					help_obj.process_results();		
+					
+				}).catch((err)=>{
+					
+					//загружаем из локального хранилища
+					help_obj.local();
+					
+				})
+			}	
+		},
 				
-		//ищем в локальном хранилище
-		let local_uid = localStorage.getItem('uid');
+		vk: function() {
+			
+			game_platform="VK";		
+			vkBridge.subscribe((e) => this.vkbridge_events(e)); 
+			vkBridge.send('VKWebAppInit');	
+			vkBridge.send('VKWebAppGetUserInfo');
+			
+		},	
+
+		debug: function() {	
 		
-		//здесь создаем нового игрока в локальном хранилище
-		if (local_uid===undefined || local_uid===null) {
+			game_platform = "debug";
+			let uid = prompt('Отладка. Введите ID', 100);
 			
-			console.log("Создаем нового локального пользователя");
+			my_data.name = my_data.uid = "debug" + uid;
+			my_data.pic_url = "https://ibb.co/GCW6vg0";	
 			
-			let rnd_names=["Бегемот","Жираф","Зебра","Тигр","Ослик","Мамонт","Волк","Лиса","Мышь","Сова","Слон","Енот","Кролик","Бизон","Пантера"];
-			let rnd_num=Math.floor(Math.random()*rnd_names.length)
-			let rand_uid=Math.floor(Math.random() * 99999);
-			
-			my_data.name 		=	rnd_names[rnd_num]+rand_uid;
-			my_data.rating 		= 	1400;
-			my_data.uid			=	"ls"+rand_uid;	
-			my_data.pic_url		=	'https://avatars.dicebear.com/v2/male/'+irnd(10,10000)+'.svg';;	
-			
-			localStorage.setItem('uid',my_data.uid);		
-			auth.process_results();
-		}
-		else
-		{
-			console.log(`Нашли айди в ЛХ (${local_uid}). Загружаем остальное из ФБ...`);
-			
-			my_data.uid = local_uid;	
-			my_data.uid = local_uid;	
-			
-			//запрашиваем мою информацию из бд или заносим в бд новые данные если игрока нет в бд
-			firebase.database().ref("players/"+my_data.uid).once('value').then((snapshot) => {		
-							
-				var data=snapshot.val();
-				if (data!==null) {
-					my_data.pic_url = data.pic_url;
-					my_data.name = data.name;
-				}			
+			help_obj.process_results();
 
-			}).catch((error) => {	
-
-
-			}).finally(()=>{
+		},
+		
+		local: function() {
 			
-				auth.process_results();
-			})	
-
-		}
-
+			game_platform="LOCAL";
+					
+			//ищем в локальном хранилище
+			let local_uid = localStorage.getItem('uid');
+			
+			//здесь создаем нового игрока в локальном хранилище
+			if (local_uid===undefined || local_uid===null) {
 				
-	},
-	
-	unknown: function () {
-		
-		game_platform="unknown";
-		alert("Неизвестная платформа! Кто Вы?")
-		
-		//загружаем из локального хранилища
-		auth.local();		
-	},
-	
-	process_results: function() {
-		
+				console.log("Создаем нового локального пользователя");
+				
+				let rnd_names=["Бегемот","Жираф","Зебра","Тигр","Ослик","Мамонт","Волк","Лиса","Мышь","Сова","Слон","Енот","Кролик","Бизон","Пантера"];
+				let rnd_num=Math.floor(Math.random()*rnd_names.length)
+				let rand_uid=Math.floor(Math.random() * 99999);
+				
+				my_data.name 		=	rnd_names[rnd_num]+rand_uid;
+				my_data.rating 		= 	1400;
+				my_data.uid			=	"ls"+rand_uid;	
+				my_data.pic_url		=	'https://avatars.dicebear.com/v2/male/'+irnd(10,10000)+'.svg';;	
+				
+				localStorage.setItem('uid',my_data.uid);		
+				help_obj.process_results();
+			}
+			else
+			{
+				console.log(`Нашли айди в ЛХ (${local_uid}). Загружаем остальное из ФБ...`);
+				
+				my_data.uid = local_uid;	
+				my_data.uid = local_uid;	
+				
+				//запрашиваем мою информацию из бд или заносим в бд новые данные если игрока нет в бд
+				firebase.database().ref("players/"+my_data.uid).once('value').then((snapshot) => {		
 								
-		//отображаем итоговые данные
-		console.log(`Итоговые данные:\nПлатформа:${game_platform}\nимя:${my_data.name}\nid:${my_data.uid}\npic_url:${my_data.pic_url}`);								
+					var data=snapshot.val();
+					if (data!==null) {
+						my_data.pic_url = data.pic_url;
+						my_data.name = data.name;
+					}			
+
+				}).catch((error) => {	
+
+
+				}).finally(()=>{
+				
+					help_obj.process_results();
+				})	
+
+			}
+
+					
+		},
 		
-		//обновляем данные в файербейс так могло что-то поменяться
-		firebase.database().ref("players/"+my_data.uid).set({name:my_data.name, pic_url: my_data.pic_url, tm:firebase.database.ServerValue.TIMESTAMP});
-								
-		//вызываем коллбэк
-		this.callback_func();
-	
+		unknown: function () {
+			
+			game_platform="unknown";
+			alert("Неизвестная платформа! Кто Вы?")
+			
+			//загружаем из локального хранилища
+			help_obj.local();		
+		},
+		
+		process_results: function() {
+			
+									
+			//отображаем итоговые данные
+			console.log(`Итоговые данные:\nПлатформа:${game_platform}\nимя:${my_data.name}\nid:${my_data.uid}\npic_url:${my_data.pic_url}`);								
+			
+			//обновляем данные в файербейс так могло что-то поменяться
+			firebase.database().ref("players/"+my_data.uid).set({name:my_data.name, pic_url: my_data.pic_url, tm:firebase.database.ServerValue.TIMESTAMP});
+									
+			//вызываем коллбэк
+			resolve("ok");
+		}
 	}
 	
-}
+	help_obj.init();
+	
+});
 
 var lb={
 	
@@ -1754,9 +1753,11 @@ function init_game_env() {
 
 	
 	//загружаем данные
-    auth.init(function() {		
-		main_menu.activate();	
-	});
+    auth.then((val)=> {
+		
+		console.log(val);
+		
+	})
 		
 
 	
