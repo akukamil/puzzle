@@ -1418,6 +1418,8 @@ var auth={
 			//если sdk яндекса найден
 			YaGames.init({}).then(ysdk => {
 				
+				throw "YaGames.init error"
+				
 				//фиксируем SDK в глобальной переменной
 				window.ysdk=ysdk;				
 				
@@ -1426,6 +1428,8 @@ var auth={
 				
 				
 			}).then((_player)=>{
+				
+				throw "ysdk.getPlayer error"
 				
 				my_data.name 	= _player.getName();
 				my_data.uid 	= _player.getUniqueID().replace(/\//g, "Z");	
@@ -1471,9 +1475,13 @@ var auth={
 							
 								my_data.name 	= data.response[0].first_name + ' ' + data.response[0].last_name;
 								my_data.uid 	= "vk" + data.response[0].id;
-								my_data.pic_url = data.response[0].photo_100;
+								my_data.pic_url = data.response[0].photo_100;	
 								
-							}	
+							}	else	{
+								
+								console.log(`users.get ошибка ${data.error}`);
+								
+							}
 							
 							console.log(`Получены данные игрока от VB WEB:\nимя:${my_data.name}\nid:${my_data.uid}\npic_url:${my_data.pic_url}`);
 							auth.process_results();	
