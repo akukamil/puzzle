@@ -450,24 +450,28 @@ var puzzle = {
 
 }
 
-var cut_string = function(s,f_size, max_width) {
-	
-	let sum_v=0;
-	for (let i=0;i<s.length;i++) {
+var make_text = function (obj, text, max_width) {
 		
-		let code_id=s.charCodeAt(i);
+	let sum_v=0;
+	let f_size=obj.fontSize;
+	
+	for (let i=0;i<text.length;i++) {
+		
+		let code_id=text.charCodeAt(i);
 		let char_obj=game_res.resources.m2_font.bitmapFont.chars[code_id];
 		if (char_obj===undefined) {
 			char_obj=game_res.resources.m2_font.bitmapFont.chars[83];			
-			s = s.substring(0, i) + 'S' + s.substring(i + 1);
+			text = text.substring(0, i) + 'S' + text.substring(i + 1);
 		}		
 
 		sum_v+=char_obj.xAdvance*f_size/64;	
-		if (sum_v>max_width)
-			return s.substring(0,i-1)+"...";		
+		if (sum_v>max_width) {
+			obj.text =  text.substring(0,i-1);					
+			return;
+		}
 	}
-	return s
 	
+	obj.text =  text;	
 }
 
 var big_message={
@@ -1763,6 +1767,9 @@ function init_game_env() {
 		
 		objects.id_cont.visible=true;
 		objects.id_avatar.texture=loader.resources.my_avatar.texture;		
+		make_text(objects.id_name,my_data.name,150);
+		objects.id_name.text=objects.my_card_name.text;	
+		any_dialog_active=0;		
 		
 	})
 		
