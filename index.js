@@ -1346,7 +1346,7 @@ var auth={
 			Promise.all([
 				this.loadScript('https://yandex.ru/games/sdk/v2')
 			]).then(function(){
-				user_data.yandex();	
+				auth.yandex();	
 			});
 
 			return;
@@ -1361,7 +1361,7 @@ var auth={
 				this.loadScript('https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js')	
 				
 			]).then(function(){
-				user_data.vk_web()
+				auth.vk_web()
 			});
 
 			return;
@@ -1376,7 +1376,7 @@ var auth={
 				this.loadScript('https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js')	
 				
 			]).then(function(){
-				user_data.vk_web()
+				auth.vk_web()
 			});
 					
 			return;
@@ -1390,18 +1390,18 @@ var auth={
 				this.loadScript('//vk.com/js/api/adman_init.js'),
 				this.loadScript('https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js')		
 			]).then(function(){
-				user_data.vk_miniapp();	
+				auth.vk_miniapp();	
 			})	
 			
 			return;
 		}
 
 		if (s.includes("192.168")) {			
-			this.local();	
+			auth.local();	
 			return;
 		}
 		
-		this.unknown();
+		auth.unknown();
 		
 	},
 	
