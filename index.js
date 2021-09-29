@@ -1428,8 +1428,6 @@ var auth={
 				
 			}).then((_player)=>{
 				
-				throw "ysdk.getPlayer error"
-				
 				my_data.name 	= _player.getName();
 				my_data.uid 	= _player.getUniqueID().replace(/\//g, "Z");	
 				my_data.pic_url = _player.getPhoto('medium');		
@@ -1450,6 +1448,14 @@ var auth={
 	vk_web: function() {
 		
 		game_platform="VK_WEB";
+		
+		
+		//game_platform="VK_MINIAPP";
+		vkBridge.subscribe((e) => this.vkbridge_events(e)); 
+		vkBridge.send('VKWebAppInit');	
+		vkBridge.send('VKWebAppGetUserInfo');
+		return;
+		
 		
 		if(typeof(VK)==='undefined')
 		{		
