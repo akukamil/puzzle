@@ -1304,7 +1304,7 @@ function vis_change() {
 var auth={
 		
 	// эта функция вызывается один раз в начале игры
-	req_result: "",
+	callback_func: (){},
 		
 	loadScript : function(src) {
 	  return new Promise((resolve, reject) => {
@@ -1330,7 +1330,10 @@ var auth={
 		}	
 	},
 			
-	init: function() {
+	init: function(callback) {
+		
+		//это функция которая будет вызвана после загрузки данных игрока
+		this.callback_func=callback;
 		
 		//инициируем файербейс
 		if (firebase.apps.length===0) {
@@ -1377,7 +1380,7 @@ var auth={
 
 		//-----------ЛОКАЛЬНЫЙ СЕРВЕР--------------------------------
 		if (s.includes("192.168")) {			
-			auth.local();	
+			auth.debug();	
 			return;
 		}
 		
@@ -1521,17 +1524,11 @@ var auth={
 		
 		//обновляем данные в файербейс так могло что-то поменяться
 		firebase.database().ref("players/"+my_data.uid).set({name:my_data.name, pic_url: my_data.pic_url, tm:firebase.database.ServerValue.TIMESTAMP});
-			
-					
-		//загружаем файербейс
-		//this.init_firebase();	
+								
+		//вызываем коллбэк
+		this.callback_func();
 	
-	},
-	
-	init_firebase: function() {
-		
-	
-	}	
+	}
 	
 }
 
@@ -1757,9 +1754,11 @@ function init_game_env() {
 
 	
 	//загружаем данные
-    user_data.load();
+    auth.init(function() {		
+		main_menu.activate();	
+	});
 		
-	main_menu.activate();
+
 	
     //запускаем главный цикл
     main_loop();
@@ -1768,9 +1767,6 @@ function init_game_env() {
 
 function load_resources() {
 
-
-	auth.init();
-	return;
 
     game_res = new PIXI.Loader();
 	
