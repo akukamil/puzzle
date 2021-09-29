@@ -1334,19 +1334,20 @@ var auth={
 		
 		let s = window.location.href;
 
-		if (s.includes("yandex")) {
-						
+		//-----------ЯНДЕКС------------------------------------
+		if (s.includes("yandex")) {						
 			Promise.all([
 				this.loadScript('https://yandex.ru/games/sdk/v2')
 			]).then(function(){
 				auth.yandex();	
 			});
-
 			return;
 		}
-				
-		if (s.includes("vk.com") && s.includes("platform=web")) {
-			
+		
+		
+		
+		//-----------ВКОНТАКТЕ------------------------------------
+		if (s.includes("vk.com")) {			
 			Promise.all([
 				this.loadScript('https://vk.com/js/api/xd_connection.js?2'),
 				this.loadScript('//ad.mail.ru/static/admanhtml/rbadman-html5.min.js'),
@@ -1354,46 +1355,20 @@ var auth={
 				this.loadScript('https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js')	
 				
 			]).then(function(){
-				auth.vk_web()
+				auth.vk()
 			});
-
 			return;
-		}
+		}	
 		
-		if (s.includes("vk.com") && s.includes("html5_mobile")) {
-			
-			Promise.all([
-				this.loadScript('https://vk.com/js/api/xd_connection.js?2'),
-				this.loadScript('//ad.mail.ru/static/admanhtml/rbadman-html5.min.js'),
-				this.loadScript('//vk.com/js/api/adman_init.js'),
-				this.loadScript('https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js')	
-				
-			]).then(function(){
-				auth.vk_web()
-			});
-					
-			return;
-		}
-		
-		if (s.includes("vk.com") && s.includes("html5_android")) {
-			
-			Promise.all([
-				this.loadScript('https://vk.com/js/api/xd_connection.js?2'),
-				this.loadScript('//ad.mail.ru/static/admanhtml/rbadman-html5.min.js'),
-				this.loadScript('//vk.com/js/api/adman_init.js'),
-				this.loadScript('https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js')		
-			]).then(function(){
-				auth.vk_miniapp();	
-			})	
-			
-			return;
-		}
 
+		//-----------ЛОКАЛЬНЫЙ СЕРВЕР--------------------------------
 		if (s.includes("192.168")) {			
 			auth.local();	
 			return;
 		}
 		
+		
+		//-----------НЕИЗВЕСТНОЕ ОКРУЖЕНИЕ---------------------------
 		auth.unknown();
 		
 	},
@@ -1505,9 +1480,6 @@ var auth={
 	process_results: function() {
 		
 		console.log("Платформа: "+game_platform)
-		
-		
-
 					
 		//загружаем файербейс
 		this.init_firebase();	
