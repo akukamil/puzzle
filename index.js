@@ -1461,6 +1461,8 @@ var auth={
 		//здесь создаем нового игрока в локальном хранилище
 		if (local_uid===undefined || local_uid===null) {
 			
+			console.log("Создаем нового локального пользователя");
+			
 			let rnd_names=["Бегемот","Жираф","Зебра","Тигр","Ослик","Мамонт","Волк","Лиса","Мышь","Сова","Слон","Енот","Кролик","Бизон","Пантера"];
 			let rnd_num=Math.floor(Math.random()*rnd_names.length)
 			let rand_uid=Math.floor(Math.random() * 99999);
@@ -1475,7 +1477,9 @@ var auth={
 		}
 		else
 		{
+			console.log(`Нашли айди в ЛХ (${local_uid}). Загружаем остальное из ФБ...`);
 			
+			my_data.uid = local_uid;	
 			my_data.uid = local_uid;	
 			
 			//запрашиваем мою информацию из бд или заносим в бд новые данные если игрока нет в бд
@@ -1503,19 +1507,21 @@ var auth={
 	unknown: function () {
 		
 		game_platform="unknown";
+		alert("Неизвестная платформа! Кто Вы?")
 		
-		auth.process_results();
-		
+		//загружаем из локального хранилища
+		auth.local();		
 	},
 	
 	process_results: function() {
 		
-		console.log("Платформа: "+game_platform)
-					
-					
-		//обновляем полученные данные в файербейс
-		console.log(`Итоговые данные:\nимя:${my_data.name}\nid:${my_data.uid}\npic_url:${my_data.pic_url}`);
+								
+		//отображаем итоговые данные
+		console.log(`Итоговые данные:\nПлатформа:${game_platform}\nимя:${my_data.name}\nid:${my_data.uid}\npic_url:${my_data.pic_url}`);								
 		
+		//обновляем данные в файербейс так могло что-то поменяться
+		firebase.database().ref("players/"+my_data.uid).set({name:my_data.name, pic_url: my_data.pic_url, tm:firebase.database.ServerValue.TIMESTAMP});
+			
 					
 		//загружаем файербейс
 		//this.init_firebase();	
@@ -1575,10 +1581,7 @@ var lb={
 		if (this.add_game_to_vk_menu_shown===1)
 			return;
 		
-		if (game_platform==='VK_WEB')
-			vkBridge.send('VKWebAppAddToFavorites');
-		
-		if (game_platform==='VK_MINIAPP')
+		if (game_platform==='VK')
 			vkBridge.send('VKWebAppAddToFavorites');
 		
 		this.add_game_to_vk_menu_shown=1;
