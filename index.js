@@ -1094,20 +1094,12 @@ var	show_ad=function(){
 		})
 	}
 	
-	if (game_platform==="VK_WEB") {
+	if (game_platform==="VK") {
 				 
 		vkBridge.send("VKWebAppShowNativeAds", {ad_format:"interstitial"})
 		.then(data => console.log(data.result))
 		.catch(error => console.log(error));	
 	}		
-			
-	if (game_platform==="VK_MINIAPP") {
-				 
-		vkBridge.send("VKWebAppShowNativeAds", {ad_format:"preloader"})
-		.then(data => console.log(data.result))
-		.catch(error => console.log(error));
-	}
-	
 }
 
 var game = {
@@ -1445,78 +1437,14 @@ var auth={
 		}	
 	},
 			
-	vk_web: function() {
+	vk: function() {
 		
-		game_platform="VK_WEB";
-		
-		
-		//game_platform="VK_MINIAPP";
+		game_platform="VK";		
 		vkBridge.subscribe((e) => this.vkbridge_events(e)); 
 		vkBridge.send('VKWebAppInit');	
 		vkBridge.send('VKWebAppGetUserInfo');
-		return;
 		
-		
-		if(typeof(VK)==='undefined')
-		{		
-			auth.process_results();	
-			console.log(`Вконтакте вообще не определен`);
-		}
-		else
-		{
-			
-			VK.init(
-			
-				//функция удачной инициализации вконтакте
-				function()
-				{
-
-					VK.api(
-						"users.get",
-						{access_token: '2c2dcb592c2dcb592c2dcb59a62c55991122c2d2c2dcb594cfd0c5d42f4b700d3e509a5',fields: 'photo_100'},
-						function (data) {
-							
-							if (data.error===undefined) {	
-							
-								my_data.name 	= data.response[0].first_name + ' ' + data.response[0].last_name;
-								my_data.uid 	= "vk" + data.response[0].id;
-								my_data.pic_url = data.response[0].photo_100;	
-								
-							}	else	{
-								
-								console.log(`users.get ошибка ${data.error}`);
-								
-							}
-							
-							console.log(`Получены данные игрока от VB WEB:\nимя:${my_data.name}\nid:${my_data.uid}\npic_url:${my_data.pic_url}`);
-							auth.process_results();	
-						}
-					)
-					
-				},	
-				
-				//функция неудачной инициализации вконтакте
-				function()
-				{	
-					console.log(`Ошибка VK.init`);
-					auth.process_results();				
-				},
-
-				//версия апи
-				'5.130');		
-			
-		}
-
-	},
-	
-	vk_miniapp: function() {
-		
-		game_platform="VK_MINIAPP";
-		vkBridge.subscribe((e) => this.vkbridge_events(e)); 
-		vkBridge.send('VKWebAppInit');	
-		vkBridge.send('VKWebAppGetUserInfo');	
-		
-	},
+	},	
 
 	debug: function() {	
 	
