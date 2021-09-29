@@ -1415,6 +1415,10 @@ var auth={
 				
 				console.log(`Получены данные игрока от яндекса:\nимя:${my_data.name}\nid:${my_data.uid}\npic_url:${my_data.pic_url}`);
 				
+				//если личные данные не получены то берем первые несколько букв айди
+				if (my_data.name=="" || my_data.name=='')
+					my_data.name=my_data.uid.substring(0,5);
+				
 				auth.process_results();		
 				
 			}).catch((err)=>{
