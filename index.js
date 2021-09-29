@@ -1420,14 +1420,19 @@ var auth={
 				//фиксируем SDK в глобальной переменной
 				window.ysdk=ysdk;				
 				
+				console.log("яндекс инициирован");
+				
 				//запрашиваем данные игрока
 				return ysdk.getPlayer();
+				
 				
 			}).then((_player)=>{
 				
 				my_data.name 	= _player.getName();
 				my_data.uid = _player.getUniqueID().replace(/\//g, "Z");	
 				my_data.pic_url = _player.getPhoto('medium');		
+				
+				console.log(`Получены данные игрока от яндекса ${my_data.name} ${my_data.name} ${my_data.pic_url}`);
 				
 				auth.process_results();		
 				
@@ -1595,50 +1600,14 @@ var auth={
 			}			
 
 		}).catch((error) => {	
-			firebase.database().ref("errors/"+my_data.uid).set(error);
+			console.log("Ошибка файербейс");
 		}).finally(()=>{
 			
 			
-			//сделаем сдесь защиту от неопределенности
-			if (my_data.rating===undefined || my_data.name===undefined) {
 				
-				let keep_id=my_data.uid;
-				if (my_data.rating===undefined)
-					my_data.uid="re_"+keep_id;
-				
-				if (my_data.name===undefined)
-					my_data.name="ne_"+keep_id;
-				
-				if (my_data.rating===undefined && my_data.first_name===undefined)
-					my_data.uid="nre_"+keep_id;
-				
-				my_data.rating=1400;
-				my_data.name=my_data.name || "Игрок";
-	
-			}
-			
-			
-			//обновляем данные в перечне игроков
-			firebase.database().ref("players/"+my_data.uid+"/tm").set(firebase.database.ServerValue.TIMESTAMP);
-			
-			//keep-alive сервис
-			setInterval(function()	{keep_alive()}, 40000);
-
-			//это событие когда меняется видимость приложения
-			document.addEventListener("visibilitychange", vis_change);
-					
 			//обновляем данные в файербейс
 			firebase.database().ref("players/"+my_data.uid).set({name:my_data.name, rating: my_data.rating, pic_url: my_data.pic_url, fp:0, tm:firebase.database.ServerValue.TIMESTAMP});
-								
-			//устанавливаем данные в попап
-			//objects.popup_avatar.texture=objects.player_avatar.texture
-			//objects.popup_rating_text.text=objects.player_rating_text.text;	
-			//objects.popup_name_text.text=objects.player_name_text.text;	
-			
-			//показываем попап с данными игрока
-			anim.add_pos({obj: objects.popup_card_cont,	param: 'y',	vis_on_end: true,	func: 'easeOutCubic',	val: [-300, 'sy'],	speed: 0.05	});
-			
-			setTimeout(function(){anim.add_pos({obj: objects.popup_card_cont,	param: 'y',	vis_on_end: true,	func: 'easeInCubic',	val: ['sy', -300],	speed: 0.05	});},3000);
+		
 			
 		})	
 	
