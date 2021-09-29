@@ -1770,7 +1770,7 @@ function load_resources() {
     game_res = new PIXI.Loader();
 	
 	
-	let git_src="https://akukamil.github.io/duel/"
+	let git_src="https://akukamil.github.io/puzzle/"
 	//let git_src=""
 	
 
