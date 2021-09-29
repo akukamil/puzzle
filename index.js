@@ -1753,7 +1753,16 @@ function init_game_env() {
 	//загружаем данные
     auth.then((val)=> {
 		
-		console.log(val);
+		return new Promise(function(resolve, reject) {
+			let loader=new PIXI.Loader();
+			loader.add("my_avatar", my_data.pic_url,{loadType: PIXI.loaders.Resource.LOAD_TYPE.IMAGE, timeout: 5000});						
+			loader.load(function(l,r) {	resolve(l)});
+		});
+		
+	}).then((loader)=> {		
+		
+		objects.id_cont.visible=true;
+		objects.id_avatar.texture=loader.resources.my_avatar.texture;		
 		
 	})
 		
