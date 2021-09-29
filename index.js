@@ -1765,7 +1765,6 @@ function init_game_env() {
 		
 	}).then((loader)=> {		
 		
-		objects.id_cont.visible=true;
 		objects.id_avatar.texture=loader.resources.my_avatar.texture;		
 		make_text(objects.id_name,my_data.name,150);
 		any_dialog_active=0;		
