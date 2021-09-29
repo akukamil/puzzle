@@ -1418,7 +1418,6 @@ var auth={
 			//если sdk яндекса найден
 			YaGames.init({}).then(ysdk => {
 				
-				throw "YaGames.init error"
 				
 				//фиксируем SDK в глобальной переменной
 				window.ysdk=ysdk;				
