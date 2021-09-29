@@ -1469,7 +1469,7 @@ var auth={
 			
 			my_data.name 		=	rnd_names[rnd_num]+rand_uid;
 			my_data.rating 		= 	1400;
-			my_data.uid			=	"u"+rand_uid;	
+			my_data.uid			=	"ls"+rand_uid;	
 			my_data.pic_url		=	'https://avatars.dicebear.com/v2/male/'+irnd(10,10000)+'.svg';;	
 			
 			localStorage.setItem('uid',my_data.uid);		
