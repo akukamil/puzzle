@@ -1329,10 +1329,11 @@ var auth={
 
 		if (e.detail.type === 'VKWebAppGetUserInfoResult') {
 			
-			my_data.name = e.detail.data.first_name + ' ' + e.detail.data.last_name;
-			my_data.uid = "vk"+e.detail.data.id;
-			my_data.pic_url = e.detail.data.photo_100;
+			my_data.name 	= e.detail.data.first_name + ' ' + e.detail.data.last_name;
+			my_data.uid 	= "vk"+e.detail.data.id;
+			my_data.pic_url = e.detail.data.photo_100;			
 			
+			console.log(`Получены данные игрока от VB MINIAPP:\nимя:${my_data.name}\nid:${my_data.uid}\npic_url:${my_data.pic_url}`);
 			auth.process_results();			
 		}	
 	},
@@ -1420,8 +1421,6 @@ var auth={
 				//фиксируем SDK в глобальной переменной
 				window.ysdk=ysdk;				
 				
-				console.log("яндекс инициирован");
-				
 				//запрашиваем данные игрока
 				return ysdk.getPlayer();
 				
@@ -1429,10 +1428,10 @@ var auth={
 			}).then((_player)=>{
 				
 				my_data.name 	= _player.getName();
-				my_data.uid = _player.getUniqueID().replace(/\//g, "Z");	
+				my_data.uid 	= _player.getUniqueID().replace(/\//g, "Z");	
 				my_data.pic_url = _player.getPhoto('medium');		
 				
-				console.log(`Получены данные игрока от яндекса имя:${my_data.name}\nid:${my_data.uid}\npic_url:${my_data.pic_url}`);
+				console.log(`Получены данные игрока от яндекса:\nимя:${my_data.name}\nid:${my_data.uid}\npic_url:${my_data.pic_url}`);
 				
 				//auth.process_results();		
 				
@@ -1470,13 +1469,13 @@ var auth={
 							
 							if (data.error===undefined) {	
 							
-								my_data.name = data.response[0].first_name + ' ' + data.response[0].last_name;
-								my_data.uid = "vk" + data.response[0].id;
+								my_data.name 	= data.response[0].first_name + ' ' + data.response[0].last_name;
+								my_data.uid 	= "vk" + data.response[0].id;
 								my_data.pic_url = data.response[0].photo_100;
 								
 							}	
 							
-							console.log(`Получены данные игрока от яндекса имя:${my_data.name}\nid:${my_data.uid}\npic_url:${my_data.pic_url}`);
+							console.log(`Получены данные игрока от VB WEB:\nимя:${my_data.name}\nid:${my_data.uid}\npic_url:${my_data.pic_url}`);
 							auth.process_results();	
 						}
 					)
