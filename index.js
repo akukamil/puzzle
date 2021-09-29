@@ -1304,7 +1304,7 @@ function vis_change() {
 var auth={
 		
 	// эта функция вызывается один раз в начале игры
-	callback_func: (){},
+	callback_func: function(){},
 		
 	loadScript : function(src) {
 	  return new Promise((resolve, reject) => {
