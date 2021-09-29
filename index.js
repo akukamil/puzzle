@@ -1776,7 +1776,7 @@ function init_game_env() {
 	}).then(()=>{
 		
 		anim.add_pos({obj: objects.id_cont,param: 'y',vis_on_end: false,func: 'easeInBack',val: ['x',-200],	speed: 0.03});
-		
+		main_menu.activate();
 	})
 		
 
