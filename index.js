@@ -1567,7 +1567,18 @@ var auth={
 	
 	init_firebase: function() {
 		
-		
+		//инициируем файербейс
+		if (firebase.apps.length===0) {
+			firebase.initializeApp({
+				apiKey: "AIzaSyDUYz_Rylw18_CG5Oiop8fb6OYpUaR3FKw",
+				authDomain: "puzzle-db6c5.firebaseapp.com",
+				databaseURL: "https://puzzle-db6c5-default-rtdb.europe-west1.firebasedatabase.app",
+				projectId: "puzzle-db6c5",
+				storageBucket: "puzzle-db6c5.appspot.com",
+				messagingSenderId: "362880721960",
+				appId: "1:362880721960:web:77016026f53c967b84011d"
+			});		
+		}
 	
 		//запрашиваем мою информацию из бд или заносим в бд новые данные если игрока нет в бд
 		firebase.database().ref("players").once('value').then((snapshot) => {		
@@ -1773,18 +1784,7 @@ var lb={
 
 function init_game_env() {
 			
-	//инициируем файербейс
-	if (firebase.apps.length===0) {
-		firebase.initializeApp({
-			apiKey: "AIzaSyDUYz_Rylw18_CG5Oiop8fb6OYpUaR3FKw",
-			authDomain: "puzzle-db6c5.firebaseapp.com",
-			databaseURL: "https://puzzle-db6c5-default-rtdb.europe-west1.firebasedatabase.app",
-			projectId: "puzzle-db6c5",
-			storageBucket: "puzzle-db6c5.appspot.com",
-			messagingSenderId: "362880721960",
-			appId: "1:362880721960:web:77016026f53c967b84011d"
-		});		
-	}
+
 			
 	document.getElementById("m_bar").outerHTML = "";
     document.getElementById("m_progress").outerHTML = "";
