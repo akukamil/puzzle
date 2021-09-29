@@ -1330,7 +1330,7 @@ var auth={
 		}	
 	},
 			
-	load: function() {
+	init: function() {
 		
 		let s = window.location.href;
 
@@ -1401,12 +1401,12 @@ var auth={
 				
 				console.log(`Получены данные игрока от яндекса:\nимя:${my_data.name}\nid:${my_data.uid}\npic_url:${my_data.pic_url}`);
 				
-				//auth.process_results();		
+				auth.process_results();		
 				
 			}).catch((err)=>{
 				
 				console.log(`Ошибка в яндексе ${err}`);
-				//auth.process_results();	
+				auth.process_results();	
 				
 			})
 		}	
@@ -1472,7 +1472,6 @@ var auth={
 		
 		game_platform="unknown";
 		
-		//последний случай - запуск из неизвестного окружения
 		auth.process_results();
 		
 	},
@@ -1768,7 +1767,7 @@ function init_game_env() {
 function load_resources() {
 
 
-	auth.load();
+	auth.init();
 	return;
 
     game_res = new PIXI.Loader();
