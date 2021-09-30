@@ -1,8 +1,7 @@
 var M_WIDTH = 450, M_HEIGHT = 800;
 var app, game_res, gres, objects = {}, my_data={};
 var g_process = () => {};
-var any_dialog_active = 0, game_tick=0, game_platform="", state="", pic_changes=10;
-
+var any_dialog_active = 0, game_tick=0, game_platform="", state="", pic_changes=10, activity_on=1;
 
 var p_data_x=[
 {hints_amount:1, sec:50, sec_reward:10, swaps:10, swap_reward: 5},
@@ -22,7 +21,6 @@ irnd=function(min,max) {
     max = Math.floor(max);
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
-
 
 class puzzle_cell_class extends PIXI.Container {
 	
@@ -243,7 +241,7 @@ var puzzle = {
 	
 	init: function () {
 		
-		this.state="";
+		state="";
 		this.completed=0;
 		
 		//на всякий случай убираем выделения
@@ -263,11 +261,25 @@ var puzzle = {
 				objects.puzzle_cells[i].y=this.y+y*this.cell_size;
 				objects.puzzle_cells[i].set_to_cell(i,this.size,this.cell_size, this.image_size);	
 				objects.puzzle_cells[i].visible=true;
+				objects.puzzle_cells[i].rotation=0;
 				objects.puzzle_cells[i].cell_ok.visible=false;
 				objects.puzzle_cells[i].cell_selected.visible=false;
 				i++;				
-			}			
+			}
 		}		
+	},
+	
+	hide_selected : function () {
+		
+		let i=0;
+		for (let y=0;y<this.size;y++) {			
+			for (let x=0;x<this.size;x++) {				
+				objects.puzzle_cells[i].cell_ok.visible=false;
+				objects.puzzle_cells[i].cell_selected.visible=false;
+				i++;				
+			}		
+		}	
+
 	},
 	
 	prepare_shuffle: function () {
@@ -281,7 +293,7 @@ var puzzle = {
 			objects.puzzle_cells[i].prepare_shuffle(tar_id,this.size, this.cell_size, this.image_size);
 		}
 			
-		this.state="";
+		state="";
 		
 	},
 	
@@ -290,20 +302,20 @@ var puzzle = {
 		//вычисляем данные для последующей перестановки
 		for (let i=0;i<this.size*this.size;i++)
 			objects.puzzle_cells[i].prepare_shuffle(i,this.size, this.cell_size, this.image_size);
-		this.state="back_shuffling";
+		state="back_shuffling";
 		this.tween_amount=0;
 		
 	},
 		
 	shuffle : function () {		
 		this.prepare_shuffle();		
-		this.state="init_shuffling";
+		state="init_shuffling";
 		this.tween_amount=0;
 	},
 	
 	show_hint: function () {
 		
-		if (this.state!=="game")
+		if (state!=="game")
 			return;
 		
 		
@@ -332,7 +344,7 @@ var puzzle = {
 	
 	process : function() {
 		
-		if (this.state==="init_shuffling") {
+		if (state==="init_shuffling") {
 			
 			for (let i=0;i<this.size*this.size;i++)
 				objects.puzzle_cells[i].move_to_target(this.tween_amount);
@@ -341,11 +353,11 @@ var puzzle = {
 			if (this.tween_amount>=1) {
 				for (let i=0;i<this.size*this.size;i++)
 					objects.puzzle_cells[i].finish_move();
-				this.state="game";
+				state="game";
 			}			
 		}
 		
-		if (this.state==="back_shuffling") {
+		if (state==="back_shuffling") {
 			
 			for (let i=0;i<this.size*this.size;i++)
 				objects.puzzle_cells[i].move_to_target(this.tween_amount);
@@ -356,11 +368,11 @@ var puzzle = {
 					objects.puzzle_cells[i].finish_move();				
 					objects.puzzle_cells[i].visible=false;
 				}
-				this.state="";
+				state="";
 			}			
 		}
 
-		if (this.state==="shuffling") {
+		if (state==="shuffling") {
 			
 			this.ec1.move_to_target(this.tween_amount);
 			this.ec2.move_to_target(this.tween_amount);
@@ -387,7 +399,7 @@ var puzzle = {
 					game.puzzle_complete();
 					
 
-				this.state="game";
+				state="game";
 				
 				//удаляем выделенные ячейки
 				this.ec1=this.ec2=null;
@@ -407,7 +419,7 @@ var puzzle = {
 	cell_down : function(ind) {
 				
 				
-		if (this.state!=="game")
+		if (state!=="game")
 			return;
 		
 		//если выбрана завершенная ячейка то выходим
@@ -438,7 +450,7 @@ var puzzle = {
 			//сообщаем в игру что сдела своп
 			game.made_a_swap();
 			
-			this.state="shuffling";
+			state="shuffling";
 			this.tween_amount=0;
 			
 		} else {					
@@ -735,7 +747,15 @@ var anim2= {
 		return x
 	},
 	
-	add : function(obj, params, vis_on_end, speed) {
+	easeOutBack: function(x) {
+		return 1 + this.c3 * Math.pow(x - 1, 3) + this.c1 * Math.pow(x - 1, 2);
+	},
+	
+	easeInBack: function(x) {
+		return this.c3 * x * x * x - this.c1 * x * x;
+	},
+	
+	add : function(obj, params, vis_on_end, speed, func) {
 		
 		//ищем свободный слот для анимации
 		for (var i = 0; i < this.slot.length; i++) {
@@ -753,7 +773,7 @@ var anim2= {
 					obj: obj,
 					params: params,
 					vis_on_end: vis_on_end,
-					func: this.linear.bind(anim),
+					func: this[func].bind(anim),
 					speed: speed,
 					progress: 0,
 					callback: params.callback
@@ -780,7 +800,7 @@ var anim2= {
 				
 				let s=this.slot[i];
 				for (let key in s.params)				
-					s.obj[key]=s.params[key][0]+s.params[key][2]*s.progress;		
+					s.obj[key]=s.params[key][0]+s.params[key][2]*s.func(s.progress);		
 				s.progress+=s.speed;
 				
 				//если анимация завершилась то удаляем слот
@@ -813,35 +833,34 @@ var main_menu = {
 	activate : function() {
 		
 		//добавляем элементы главного меню
-		anim.add_pos({obj: objects.main_buttons_cont,param: 'x',vis_on_end: true,func: 'linear',val: [450,'sx'],	speed: 0.03});
-				
+		anim.add_pos({obj: objects.main_buttons_cont,param: 'x',vis_on_end: true,func: 'linear',val: [450,'sx'],	speed: 0.03});				
 		anim.add_pos({obj: objects.main_header,param: 		'x',vis_on_end: true,func: 'linear',val: [450,'sx'],	speed: 0.03	});
 		
-		//big_message.show('Ошибка', 'Привет', 'Опять привет');
 		
 		//устанавливаем процессинговую функцию
 		g_process=function(){main_menu.process()};
-		
 		
 	},
 	
 	play_button_down: function() {
 		
-        if (objects.main_buttons_cont.ready === false || any_dialog_active===1)
+        if (objects.main_buttons_cont.ready === false || any_dialog_active === 1 || activity_on === 1)
             return;
 		
-		//убираем с экрана главное меню
-		this.hide();
+
 		
 		//переходим в следующее меню
 		menu2.activate(this.first_run);
 		this.first_run=0;
 		
+		//убираем с экрана главное меню
+		this.hide();		
+		
 	},
 	
 	lb_button_down: function() {
 		
-        if (objects.main_buttons_cont.ready === false || any_dialog_active===1) {
+        if (objects.main_buttons_cont.ready === false || any_dialog_active === 1  || activity_on === 1) {
 			gres.locked.sound.play();
             return;
 		}
@@ -876,7 +895,7 @@ var main_menu = {
 	
 	rules_button_down: function() {
 		
-		if (objects.rules_cont.ready===false || any_dialog_active===1) {
+		if (objects.rules_cont.ready === false || any_dialog_active === 1  || activity_on === 1) {
 			gres.locked.sound.play();
 			return;
 		}
@@ -922,6 +941,8 @@ var main_menu = {
 }
 
 var menu2= {
+	
+	pic_load_error : 0,
 			
 	activate : function(init) {				
 		
@@ -939,6 +960,12 @@ var menu2= {
 			anim.add_pos({obj: objects.puzzle_img,param: 'alpha',		vis_on_end: true,func: 'linear',val: ['alpha',1],	speed: 0.03	});
 		}		
 		
+		
+		//если ошибка при зазгрузе то показыаем кнопку бесплатной перезазгрузки
+		if (this.pic_load_error === 1)
+			objects.reload_bad_pic_button.visible=true;		
+		
+		
 		//добавляем сетку картинки
 		anim.add_pos({obj: objects['net_'+puzzle.size],param: 'alpha',		vis_on_end: true,func: 'linear',val: [0,1],	speed: 0.03	});
 		
@@ -953,6 +980,8 @@ var menu2= {
 	
 	set_random_pic: function(update_price=0) {
 		
+		activity_on = 1;
+		
 		PIXI.utils.TextureCache={};
 		PIXI.utils.BaseTextureCache={};	
 		objects.puzzle_img.texture=PIXI.Texture.BLACK;
@@ -962,37 +991,42 @@ var menu2= {
 		let loader=new PIXI.Loader();
 		loader.update_price=update_price;
 		
-		loader.add('puzzle_img', 'https://picsum.photos/400?id='+irnd(0,99999999),{loadType: PIXI.LoaderResource.LOAD_TYPE.IMAGE, timeout: 3000});
-		loader.load((loader, resources) => {
-			objects.puzzle_img.texture=resources['puzzle_img'].texture;
-			anim.add_pos({obj: objects.puzzle_img,param: 'alpha',vis_on_end: true,func: 'linear',val: [0,1],	speed: 0.03});	
-			objects.puzzle_pic_updating.visible=false;
-			
-			
-			//обновляем количество 
-			pic_changes -= loader.update_price;
-			objects.pic_changes_text.text=pic_changes;
-		});
-		
-		//если какая-то ошибка произошла
-		loader.onError.add(() => {
-			big_message.show('Ошибка','Не получилось загрузить картинку','Побробуйте снова', function(){menu2.set_random_pic(loader.update_price)},null);
-			console.log("Error resources");
-			
-			//обновляем количество 
-			pic_changes += loader.update_price;
-			objects.pic_changes_text.text=pic_changes;
-			
-		});
-		
-		
-		
+		loader.add('puzzle_img', 'https://picsum.photos/400?id='+irnd(0,99999999),{loadType: PIXI.LoaderResource.LOAD_TYPE.IMAGE, timeout: 4000});
+		loader.load((l, r) => {
 						
+			if (r.puzzle_img.texture.height===1) {
+				
+				console.log("Не получилось загрузить")
+				objects.puzzle_pic_updating.visible=false;
+				
+				big_message.show('Ошибка','Не получилось загрузить картинку','Побробуйте снова', function(){big_message.close()},null);
+				
+				//показываем кнопку бесплатной перезагрузки картинки
+				objects.reload_bad_pic_button.visible=true;		
+				
+				this.pic_load_error=1;
+			}
+			else
+			{
+				
+				this.pic_load_error=0;
+				objects.puzzle_img.texture=r.puzzle_img.texture;
+				anim.add_pos({obj: objects.puzzle_img,param: 'alpha',vis_on_end: true,func: 'linear',val: [0,1],	speed: 0.03});	
+				objects.puzzle_pic_updating.visible=false;
+							
+
+				//убираем кнопку бесплатной перезагрузки если она была
+				objects.reload_bad_pic_button.visible=false;		
+				
+			}
+			
+			activity_on = 0;
+		});						
 	},
 		
 	change_pic_down: function() {	
 	
-		if (objects.buttons_cont2.ready===false || objects.puzzle_pic_updating.visible===true || any_dialog_active===1)
+		if (objects.buttons_cont2.ready===false || objects.puzzle_pic_updating.visible===true || any_dialog_active===1  || activity_on === 1)
 			return;
 
 		if (pic_changes<=0) {			
@@ -1000,12 +1034,16 @@ var menu2= {
 			return;
 		}
 		
+		//обновляем количество 
+		pic_changes --;
+		objects.pic_changes_text.text=pic_changes;		
+		
 		this.set_random_pic(1);		
 	},
 	
 	start_down: function() {
 		
-		if (objects.buttons_cont2.ready===false || objects.puzzle_pic_updating.visible===true || any_dialog_active===1)
+		if (objects.buttons_cont2.ready === false || objects.puzzle_pic_updating.visible === true || any_dialog_active === 1 || this.pic_load_error === 1 || activity_on === 1)
 			return;
 		
 		this.close();
@@ -1015,9 +1053,15 @@ var menu2= {
 	
 	change_board_down : function(size) {
 		
+		
+		if (any_dialog_active === 1 || this.pic_load_error === 1 || activity_on === 1)
+			return;
+		
 		//если нажали на туже сетку то выходим
 		if (size===puzzle.size)
 			return;
+		
+		let old_width=objects['net_'+puzzle.size].width;
 
 		//снчала скрываем старую сеть
 		anim.add_pos({obj: objects['net_'+puzzle.size],param: 'alpha',		vis_on_end: false,func: 'linear',val: [1,0],	speed: 0.03	});
@@ -1033,8 +1077,16 @@ var menu2= {
 			x:[objects.puzzle_img.x,puzzle.x],
 			y:[objects.puzzle_img.y,puzzle.y],
 			width:[objects.puzzle_img.width,puzzle.width],
-			height:[objects.puzzle_img.height,puzzle.width],
-		}, true, 0.03);
+			height:[objects.puzzle_img.height,puzzle.width],			
+		}, true, 0.03,'easeOutBack');
+		
+		//обновляем размер и положение картинки		
+		anim2.add(objects['net_'+puzzle.size],{
+			width:[old_width,objects['net_'+puzzle.size].width],
+			height:[old_width,objects['net_'+puzzle.size].width],
+			alpha: [0,1]
+		}, true, 0.03,'easeOutBack');
+		
 		
 		
 		//устанавливаем фрейм
@@ -1051,18 +1103,22 @@ var menu2= {
 	
 	back_button_down : function() {
 		
-		if (objects.puzzle_pic_updating.visible===true || objects.puzzle_img.ready===false || objects.puzzle_pic_updating.visible===true || any_dialog_active===1)
+		if (objects.puzzle_pic_updating.visible===true || objects.puzzle_img.ready===false || any_dialog_active===1 || activity_on === 1)
 			return;
-		
 		
 		this.close();
 		main_menu.activate();
 		
 	},
 	
+	reload_bad_pic : function () {
+		
+		this.set_random_pic(0);	
+		
+	},
+	
 	close : function() {
 		
-
 		
 		//убираем элементы  меню
 		anim.add_pos({obj: objects.top_buttons_cont2,param: 'x',vis_on_end: false,func: 'linear',val: ['sx',-450],	speed: 0.03});		
@@ -1110,6 +1166,7 @@ var game = {
 
 	start_time: 0,
 	swaps_made:0,
+	timer : 0,
     process: function () {},
 
     activate: function () {
@@ -1150,26 +1207,15 @@ var game = {
 	
 	puzzle_complete: function() {
 		
-		//показываем сообщение
-		puzzle_complete_message.show();
-		
-		//вычисляем и отображаем награду за время
-		objects.game_complete_time_rew.text='Награда за скорость: ' + this.get_sec_reward_data()[0];
-		
-		//вычисляем и отображаем награду за свопы
-		objects.game_complete_swap_rew.text='Награда за точность: ' + this.get_swap_reward_data()[0];
-								
-		//Скрываем сетку
-		anim.add_pos({obj: objects['net_'+puzzle.size],param: 'alpha',	vis_on_end: false,func: 'linear',val: ['alpha',0],	speed: 0.03	});
 
 		//утсанавливаем процессинговую функцию которая вращает фигуру
-		g_process=function(){puzzle_complete_message.process()};
+		g_process=function(){game.process_finish(1)};
 		
 	},
 	
 	back_button_down: function() {
 		
-		if (any_dialog_active===1)
+		if (any_dialog_active===1 || activity_on==1)
 			return;
 		
 		puzzle.start_back_shuffle();
@@ -1188,7 +1234,7 @@ var game = {
 	
 	hint_button_down: function () {		
 	
-		if (any_dialog_active===1)
+		if (any_dialog_active===1 || activity_on==1)
 			return;
 	
 		if (puzzle.show_hint()===true)
@@ -1197,15 +1243,65 @@ var game = {
 	
 	process : function () {
 		
-
 		let rew_data = this.get_sec_reward_data();
 		
 		objects.reward_time_slider.x = - 10 + 390 * rew_data[1];			
 
 		objects.reward_time_text.text = rew_data[0];
 		
+	},
+	
+	process_finish : function (init) {
+		
+		if (init === 1) {		
+
+			activity_on=1;
+		
+			this.timer=0;
+		
+			g_process=function(){game.process_finish(0)};
+				
+			//Скрываем сетку
+			anim.add_pos({obj: objects['net_'+puzzle.size],param: 'alpha',	vis_on_end: false,func: 'linear',val: ['alpha',0],	speed: 0.03	});
+			
+		}
+		
+		for (let p =0 ; p < puzzle.size * puzzle.size ; p ++) {
+						
+			if (this.timer === (p*30+90)) {
+				
+				//обновляем размер и положение картинки		
+				anim2.add(objects.puzzle_cells[p],{
+					x:[objects.puzzle_cells[p].x,225],
+					y:[objects.puzzle_cells[p].y,150],
+					rotation:[objects.puzzle_cells[p].rotation,0.5],
+					width:[objects.puzzle_cells[p].width,0],
+					height:[objects.puzzle_cells[p].height,0],					
+				}, false, 0.025, 'easeInBack');		
+			}				
+		}
 		
 		
+		
+		if (this.timer === (puzzle.size * puzzle.size * 30 + 90) ) {
+		
+			//показываем сообщение
+			puzzle_complete_message.show();
+			
+			//вычисляем и отображаем награду за время
+			objects.game_complete_time_rew.text='Награда за скорость: ' + this.get_sec_reward_data()[0];
+			
+			//вычисляем и отображаем награду за свопы
+			objects.game_complete_swap_rew.text='Награда за точность: ' + this.get_swap_reward_data()[0];		
+		
+			activity_on==0;
+		
+		}
+		
+
+	
+		
+		this.timer++;
 	},
 	
 	get_swap_reward_data : function () {
@@ -1668,7 +1764,6 @@ var lb={
 
 function init_game_env() {
 			
-
 			
 	document.getElementById("m_bar").outerHTML = "";
     document.getElementById("m_progress").outerHTML = "";
@@ -1767,7 +1862,7 @@ function init_game_env() {
 		
 		objects.id_avatar.texture=loader.resources.my_avatar.texture;		
 		make_text(objects.id_name,my_data.name,150);
-		any_dialog_active=0;		
+		activity_on=0;	
 		
 		return new Promise((resolve, reject) => {
 			setTimeout(resolve, 1500);
@@ -1776,10 +1871,11 @@ function init_game_env() {
 	}).then(()=>{
 		
 		anim.add_pos({obj: objects.id_cont,param: 'y',vis_on_end: false,func: 'easeInBack',val: ['y',-200],	speed: 0.03});
-		main_menu.activate();
+		
 	})
 		
-
+	//запускаем главное меню
+	main_menu.activate();
 	
     //запускаем главный цикл
     main_loop();
@@ -1792,8 +1888,8 @@ function load_resources() {
     game_res = new PIXI.Loader();
 	
 	
-	let git_src="https://akukamil.github.io/puzzle/"
-	//let git_src=""
+	//let git_src="https://akukamil.github.io/puzzle/"
+	let git_src=""
 	
 
 	game_res.add("m2_font", git_src+"m_font.fnt");
