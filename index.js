@@ -1623,7 +1623,6 @@ var auth= new Promise((resolve, reject)=>{
 				let rand_uid=Math.floor(Math.random() * 99999);
 				
 				my_data.name 		=	rnd_names[rnd_num]+rand_uid;
-				my_data.balance 	= 	0;
 				my_data.uid			=	"ls"+rand_uid;	
 				my_data.pic_url		=	'https://avatars.dicebear.com/v2/male/'+irnd(10,10000)+'.svg';;	
 				
@@ -1649,11 +1648,14 @@ var auth= new Promise((resolve, reject)=>{
 						if (repeat === 1)
 							alert('Какая-то ошибка');
 						
+						console.log(`Нашли данные в ЛХ но не нашли в ФБ, повторный локальный запрос...`);	
+
+						
 						//повторно запускаем локальный поиск						
 						localStorage.clear();
 						help_obj.local(1);	
 							
-						console.log(`Нашли данные в ЛХ но не нашли в ФБ, повторный локальный запрос...`);
+
 						
 					} else {						
 						
@@ -1948,7 +1950,7 @@ function init_game_env() {
 			my_data.balance = data.balance;
 		
 		if (data.fpc === undefined)
-			my_data.fpc = 0;
+			my_data.fpc = 10;
 		else
 			my_data.fpc = data.fpc;
 		
