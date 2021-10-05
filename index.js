@@ -5,8 +5,8 @@ var any_dialog_active = 0, game_tick=0, game_platform="", state="", pic_changes=
 
 var p_data_x=[
 {hints_amount:1, sec:50, sec_reward:10, swaps:10, swap_reward: 5},
-{hints_amount:2, sec:90, sec_reward:30, swaps:20, swap_reward: 88},
-{hints_amount:3, sec:150, sec_reward:100, swaps:40, swap_reward: 30},
+{hints_amount:2, sec:80, sec_reward:50, swaps:20, swap_reward: 10},
+{hints_amount:3, sec:150, sec_reward:120, swaps:30, swap_reward: 30},
 ]
 
 var puzzle_pic_loader=new PIXI.Loader();
@@ -168,12 +168,12 @@ class lb_player_card_class extends PIXI.Container{
 		this.name.y=20;
 		
 	
-		this.rating=new PIXI.BitmapText('1422', {fontName: 'Century Gothic', fontSize: 35});
-		this.rating.x=300;
-		this.rating.tint=0x00ffff;
-		this.rating.y=20;		
+		this.balance=new PIXI.BitmapText('1422', {fontName: 'Century Gothic', fontSize: 35});
+		this.balance.x=300;
+		this.balance.tint=0x00ffff;
+		this.balance.y=20;		
 		
-		this.addChild(this.bcg,this.place, this.avatar, this.name, this.rating);		
+		this.addChild(this.bcg,this.place, this.avatar, this.name, this.balance);		
 	}
 	
 	
@@ -526,9 +526,6 @@ var big_message={
 	close : function() {
 		
 		any_dialog_active=0;
-		
-		
-		any_dialog_active=0;
 		anim.add_pos({obj:objects.big_message_cont,param:'y',vis_on_end:false,func:'easeInBack',val:['sy', 	800],	speed:0.05});
 		
 	},
@@ -550,6 +547,54 @@ var big_message={
 		this.ok_callback();		
 		this.close();		
 	}
+	
+}
+
+var pbd = {
+	
+	
+	show : function () {
+		
+		any_dialog_active=1;
+		anim.add_pos({obj:objects.pbd_cont,param:'y',vis_on_end:true,func:'easeOutBack',val:[800,'sy'],	speed:0.05});
+		
+	},
+	
+	close : function () {
+		
+		
+		any_dialog_active=0;
+		anim.add_pos({obj:objects.pbd_cont,param:'y',vis_on_end:false,func:'easeInBack',val:['sy', 	800],	speed:0.05});
+
+		
+	},
+	
+	ok_down : function () {		
+		
+		if (my_data.balance >= 100) {
+			
+			//обновляем локально
+			my_data.balance-=100;
+			my_data.fpc+=3;
+			
+			//обновляем на сервере
+			firebase.database().ref("players/"+my_data.uid+"/fpc").set(my_data.fpc);
+			firebase.database().ref("players/"+my_data.uid+"/balance").set(my_data.balance);
+			
+			//показываем сколько осталось смен картинок
+			objects.pic_changes_text.text=my_data.fpc;
+			
+			//обновляем баланс
+			objects.balance_header.text = my_data.balance;
+			
+		}
+			
+		
+		any_dialog_active=0;
+		anim.add_pos({obj:objects.pbd_cont,param:'y',vis_on_end:false,func:'easeInBack',val:['sy', 	800],	speed:0.05});
+		
+	}
+	
 	
 }
 
@@ -935,7 +980,7 @@ var main_menu = {
 		}
 		
 		if (game_platform==='VK_WEB' || game_platform==='VK_MINIAPP')
-			vkBridge.send('VKWebAppShowWallPostBox', {"message": `Мой рейтинг в игре Стикмэны-Дуэль ${my_data.rating}. А сколько наберешь ты?`});
+			vkBridge.send('VKWebAppShowWallPostBox', {"message": `Мой рейтинг в игре Стикмэны-Дуэль ${my_data.balance}. А сколько наберешь ты?`});
 	}
 	
 }
@@ -961,6 +1006,9 @@ var menu2= {
 		}		
 		
 		
+		//обновляем баланс
+		objects.balance_header.text = my_data.balance;
+		
 		//если ошибка при зазгрузе то показыаем кнопку бесплатной перезазгрузки
 		if (this.pic_load_error === 1)
 			objects.reload_bad_pic_button.visible=true;		
@@ -974,7 +1022,7 @@ var menu2= {
 		objects.puzzle_img.width=objects.puzzle_img.height=puzzle.width;		
 
 		//показываем сколько осталось смен картинок
-		objects.pic_changes_text.text=pic_changes;
+		objects.pic_changes_text.text=my_data.fpc;
 		
 	},
 	
@@ -1029,14 +1077,15 @@ var menu2= {
 		if (objects.buttons_cont2.ready===false || objects.puzzle_pic_updating.visible===true || any_dialog_active===1  || activity_on === 1)
 			return;
 
-		if (pic_changes<=0) {			
-			big_message.show('Инфа', 'Больше нет купонов на смену картинок', 'Но можно приобрести за рекламу');
+		if (my_data.fpc<=0) {			
+			pbd.show();
 			return;
 		}
 		
 		//обновляем количество 
-		pic_changes --;
-		objects.pic_changes_text.text=pic_changes;		
+		my_data.fpc --;
+		objects.pic_changes_text.text=my_data.fpc;	
+		firebase.database().ref("players/"+my_data.uid+"/fpc").set(my_data.fpc);
 		
 		this.set_random_pic(1);		
 	},
@@ -1119,6 +1168,8 @@ var menu2= {
 	
 	close : function() {
 		
+		//убираем бесплатную перезагрузку картинки
+		objects.reload_bad_pic_button.visible=false;
 		
 		//убираем элементы  меню
 		anim.add_pos({obj: objects.top_buttons_cont2,param: 'x',vis_on_end: false,func: 'linear',val: ['sx',-450],	speed: 0.03});		
@@ -1167,6 +1218,8 @@ var game = {
 	start_time: 0,
 	swaps_made:0,
 	timer : 0,
+	last_time_reward : 0,
+	finish_params : {3 :[30,0.025], 4:[25,0.03], 5:[20,0.035]},
     process: function () {},
 
     activate: function () {
@@ -1249,6 +1302,8 @@ var game = {
 
 		objects.reward_time_text.text = rew_data[0];
 		
+		this.last_time_reward = rew_data[0];
+		
 	},
 	
 	process_finish : function (init) {
@@ -1268,7 +1323,7 @@ var game = {
 		
 		for (let p =0 ; p < puzzle.size * puzzle.size ; p ++) {
 						
-			if (this.timer === (p*30+90)) {
+			if (this.timer === (p*this.finish_params[puzzle.size][0]+90)) {
 				
 				//обновляем размер и положение картинки		
 				anim2.add(objects.puzzle_cells[p],{
@@ -1277,29 +1332,34 @@ var game = {
 					rotation:[objects.puzzle_cells[p].rotation,0.5],
 					width:[objects.puzzle_cells[p].width,0],
 					height:[objects.puzzle_cells[p].height,0],					
-				}, false, 0.025, 'easeInBack');		
+				}, false, this.finish_params[puzzle.size][1], 'easeInBack');		
 			}				
 		}
-		
-		
-		
-		if (this.timer === (puzzle.size * puzzle.size * 30 + 90) ) {
-		
-			//показываем сообщение
-			puzzle_complete_message.show();
+				
+		if (this.timer === (puzzle.size * puzzle.size * this.finish_params[puzzle.size][0] + 90) ) {
+					
+			let speed_rew=this.last_time_reward;
+			let swap_rew=this.get_swap_reward_data()[0];
 			
 			//вычисляем и отображаем награду за время
-			objects.game_complete_time_rew.text='Награда за скорость: ' + this.get_sec_reward_data()[0];
+			objects.game_complete_time_rew.text='Бонус за время: +' +speed_rew +'\nБонус за точность: +' + swap_rew;
 			
 			//вычисляем и отображаем награду за свопы
-			objects.game_complete_swap_rew.text='Награда за точность: ' + this.get_swap_reward_data()[0];		
-		
-			activity_on==0;
-		
-		}
-		
+			let total_reward=speed_rew + swap_rew;
+			objects.game_complete_swap_rew.text='Всего: +' + (speed_rew + swap_rew);	
 
-	
+			//обновляем данные и в базе данных тоже
+			my_data.balance += total_reward;
+			firebase.database().ref("players/"+my_data.uid+"/balance").set(my_data.balance);
+		
+			//показываем сообщение
+			puzzle_complete_message.show();		
+		
+			activity_on=0;		
+		}		
+
+		//обрабатываем кручение задней картинки
+		puzzle_complete_message.process();
 		
 		this.timer++;
 	},
@@ -1387,10 +1447,7 @@ var puzzle_complete_message= {
 	process : function () {
 		if (objects.rainbow.visible===true)
 			objects.rainbow.rotation+=0.03;
-		
 	}
-	
-	
 	
 }
 
@@ -1566,7 +1623,7 @@ var auth= new Promise((resolve, reject)=>{
 				let rand_uid=Math.floor(Math.random() * 99999);
 				
 				my_data.name 		=	rnd_names[rnd_num]+rand_uid;
-				my_data.rating 		= 	1400;
+				my_data.balance 	= 	0;
 				my_data.uid			=	"ls"+rand_uid;	
 				my_data.pic_url		=	'https://avatars.dicebear.com/v2/male/'+irnd(10,10000)+'.svg';;	
 				
@@ -1617,9 +1674,13 @@ var auth= new Promise((resolve, reject)=>{
 			//отображаем итоговые данные
 			console.log(`Итоговые данные:\nПлатформа:${game_platform}\nимя:${my_data.name}\nid:${my_data.uid}\npic_url:${my_data.pic_url}`);								
 			
-			//обновляем данные в файербейс так могло что-то поменяться
-			firebase.database().ref("players/"+my_data.uid).set({name:my_data.name, pic_url: my_data.pic_url, tm:firebase.database.ServerValue.TIMESTAMP});
-									
+			//обновляем базовые данные в файербейс так могло что-то поменяться
+			firebase.database().ref("players/"+my_data.uid+"/name").set(my_data.name);
+			firebase.database().ref("players/"+my_data.uid+"/pic_url").set(my_data.pic_url);
+			firebase.database().ref("players/"+my_data.uid+"/tm").set(firebase.database.ServerValue.TIMESTAMP);
+
+
+			
 			//вызываем коллбэк
 			resolve("ok");
 		}
@@ -1698,7 +1759,7 @@ var lb={
 	
 	update: function () {
 		
-		firebase.database().ref("players").orderByChild('rating').limitToLast(25).once('value').then((snapshot) => {
+		firebase.database().ref("players").orderByChild('balance').limitToLast(25).once('value').then((snapshot) => {
 			
 			if (snapshot.val()===null) {
 			  console.log("Что-то не получилось получить данные о рейтингах");
@@ -1708,7 +1769,7 @@ var lb={
 				var players_array = [];
 				snapshot.forEach(players_data=> {			
 					if (players_data.val().name!=="" && players_data.val().name!=='')
-						players_array.push([players_data.val().name, players_data.val().rating, players_data.val().pic_url]);	
+						players_array.push([players_data.val().name, players_data.val().balance, players_data.val().pic_url]);	
 				});
 				
 
@@ -1724,10 +1785,10 @@ var lb={
 				//загружаем тройку лучших
 				for (let i=0;i<3;i++) {
 					let fname=players_array[i][0];					
-					fname = cut_string(fname,objects['lb_1_name'].fontSize,180);
+					make_text(objects['lb_1_name'],fname,180);
 					
 					objects['lb_'+(i+1)+'_name'].text=fname;
-					objects['lb_'+(i+1)+'_rating'].text=players_array[i][1];					
+					objects['lb_'+(i+1)+'_balance'].text=players_array[i][1];					
 					loader.add('leaders_avatar_'+i, players_array[i][2],loaderOptions);
 				};
 				
@@ -1739,7 +1800,7 @@ var lb={
 					fname = cut_string(fname,objects.lb_cards[i-3].name.fontSize,180);
 					
 					objects.lb_cards[i-3].name.text=fname;
-					objects.lb_cards[i-3].rating.text=players_array[i][1];					
+					objects.lb_cards[i-3].balance.text=players_array[i][1];					
 					loader.add('leaders_avatar_'+i, players_array[i][2],loaderOptions);					
 					
 				};
@@ -1862,6 +1923,30 @@ function init_game_env() {
 		
 		objects.id_avatar.texture=loader.resources.my_avatar.texture;		
 		make_text(objects.id_name,my_data.name,150);
+		
+		return firebase.database().ref("players/"+my_data.uid).once('value');
+		
+	}).then((snapshot)=>{
+		
+		let data=snapshot.val();
+		
+		
+		
+		if (data.balance === undefined)
+			my_data.balance = 0;
+		else
+			my_data.balance = data.balance;
+		
+		if (data.fpc === undefined)
+			my_data.fpc = 0;
+		else
+			my_data.fpc = data.fpc;
+		
+		
+		//устанавливаем баланс в попап
+		objects.id_balance.text=my_data.balance;	
+			
+			
 		activity_on=0;	
 		
 		return new Promise((resolve, reject) => {
