@@ -1606,7 +1606,7 @@ var auth= new Promise((resolve, reject)=>{
 
 		},
 		
-		local: function() {
+		local: function(repeat = 0) {
 			
 			game_platform="LOCAL";
 					
@@ -1641,17 +1641,27 @@ var auth= new Promise((resolve, reject)=>{
 				firebase.database().ref("players/"+my_data.uid).once('value').then((snapshot) => {		
 								
 					var data=snapshot.val();
-					if (data!==null) {
+					
+					//если на сервере нет таких данных
+					if (data === null) {
+												
+						//если повтоно нету данных то выводим предупреждение
+						if (repeat === 1)
+							alert('Какая-то ошибка');
+						
+						//повторно запускаем локальный поиск						
+						localStorage.clear();
+						help_obj.local(1);	
+							
+						console.log(`Нашли данные в ЛХ но не нашли в ФБ, повторный локальный запрос...`);
+						
+					} else {						
+						
 						my_data.pic_url = data.pic_url;
 						my_data.name = data.name;
-					}			
+						help_obj.process_results();
+					}
 
-				}).catch((error) => {	
-
-
-				}).finally(()=>{
-				
-					help_obj.process_results();
 				})	
 
 			}
