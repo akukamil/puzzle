@@ -1243,7 +1243,7 @@ var game = {
 		
 		
 		//показываем сколько подсказок есть
-		objects.hint_button_text.text="(x "+puzzle.hints_amount+")"
+		objects.hint_button_text.text=puzzle.hints_amount;
 
 		this.swaps_made=0;
 		
@@ -1291,7 +1291,7 @@ var game = {
 			return;
 	
 		if (puzzle.show_hint()===true)
-			objects.hint_button_text.text="(x "+puzzle.hints_amount+")"
+			objects.hint_button_text.text=puzzle.hints_amount;
 	},
 	
 	process : function () {
@@ -1844,7 +1844,7 @@ function init_game_env() {
 	//короткое обращение к ресурсам
 	gres=game_res.resources;
 
-    app = new PIXI.Application({width: M_WIDTH, height: M_HEIGHT, antialias: false, backgroundColor: 0x553399});
+    app = new PIXI.Application({width: M_WIDTH, height: M_HEIGHT, antialias: false, backgroundAlpha: 0});
     document.body.appendChild(app.view);
 
     var resize = function () {
@@ -1927,7 +1927,7 @@ function init_game_env() {
 		
 		return new Promise(function(resolve, reject) {
 			let loader=new PIXI.Loader();
-			loader.add("my_avatar", my_data.pic_url,{loadType: PIXI.loaders.Resource.LOAD_TYPE.IMAGE, timeout: 5000});						
+			loader.add("my_avatar", my_data.pic_url,{loadType: PIXI.LoaderResource.LOAD_TYPE.IMAGE, timeout: 5000});						
 			loader.load(function(l,r) {	resolve(l)});
 		});
 		
