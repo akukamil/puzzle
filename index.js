@@ -611,18 +611,53 @@ var pbd = {
 	
 	ok_down : function () {		
 		
-
-		my_data.fpc+=3;
+		
+		if (platform === "YANDEX") {
+			
+			
+			ysdk.adv.showRewardedVideo({
+				callbacks: {
+					onOpen: () => {
+					},
+					onRewarded: () => {
+						this.rewarded(1);
+					},
+					onClose: () => {
+						this.rewarded(0);
+					}, 
+					onError: (e) => {
+						this.rewarded(0);
+					}
+				}
+			})		
+		}	
+		
+		
+		if (platform === "VK") {
+			
+			vkBridge.send("VKWebAppShowNativeAds", {ad_format:"reward"})
+			.then(data => console.log(data.result))
+			.catch(error => console.log(error));	
+			
+		}
+		
+	},
+	
+	rewarded : function(is_ok) {
+		
+		if (is_ok === 1)
+			my_data.fpc+=5;
 		
 		//обновляем на сервере
 		firebase.database().ref("players/"+my_data.uid+"/fpc").set(my_data.fpc);
 		
 		//показываем сколько осталось смен картинок
-		objects.pic_changes_text.text=my_data.fpc;
-				
+		objects.pic_changes_text.text=my_data.fpc;				
 		
 		any_dialog_active=0;
-		anim.add_pos({obj:objects.pbd_cont,param:'y',vis_on_end:false,func:'easeInBack',val:['sy', 	800],	speed:0.05});
+		
+		//убираем диалог
+		anim.add_pos({obj:objects.pbd_cont,param:'y',vis_on_end:false,func:'easeInBack',val:['sy', 	800],	speed:0.05});	
 		
 	}
 	
@@ -2177,8 +2212,8 @@ function load_resources() {
     game_res = new PIXI.Loader();
 	
 	
-	//let git_src="https://akukamil.github.io/puzzle/"
-	let git_src=""
+	let git_src="https://akukamil.github.io/puzzle/"
+	//let git_src=""
 	
 
 	game_res.add("m2_font", git_src+"m_font.fnt");
