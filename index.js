@@ -2,6 +2,7 @@ var M_WIDTH = 450, M_HEIGHT = 800;
 var app, game_res, gres, objects = {}, my_data={};
 var g_process = () => {};
 var any_dialog_active = 0, game_tick=0, game_platform="", state="", pic_changes=10, activity_on=1;
+var cur_progress = -1, global_record =0;
 
 var p_data_x=[
 {hints_amount:1, sec:50, sec_reward:10, swaps:10, swap_reward: 5},
@@ -156,6 +157,7 @@ class lb_player_card_class extends PIXI.Container{
 		this.place=new PIXI.BitmapText("1", {fontName: 'Century Gothic', fontSize: 24});
 		this.place.x=20;
 		this.place.y=20;
+		this.place.tint=0x220022;
 		
 		this.avatar=new PIXI.Sprite();
 		this.avatar.x=40;
@@ -163,17 +165,18 @@ class lb_player_card_class extends PIXI.Container{
 		this.avatar.width=this.avatar.height=48;
 		
 		
-		this.name=new PIXI.BitmapText('Игорь Николаев', {fontName: 'Century Gothic', fontSize: 25});
+		this.name=new PIXI.BitmapText(' ', {fontName: 'Century Gothic', fontSize: 25});
 		this.name.x=100;
 		this.name.y=20;
+		this.name.tint=0x002222;
 		
 	
-		this.balance=new PIXI.BitmapText('1422', {fontName: 'Century Gothic', fontSize: 35});
-		this.balance.x=300;
-		this.balance.tint=0x00ffff;
-		this.balance.y=20;		
+		this.record=new PIXI.BitmapText(' ', {fontName: 'Century Gothic', fontSize: 35});
+		this.record.x=300;
+		this.record.tint=0x007755;
+		this.record.y=20;		
 		
-		this.addChild(this.bcg,this.place, this.avatar, this.name, this.balance);		
+		this.addChild(this.bcg,this.place, this.avatar, this.name, this.record);		
 	}
 	
 	
@@ -250,7 +253,6 @@ var puzzle = {
 		//обновляем размер		
 		this.set_size(this.size);
 		
-
 		//подготавливаем пазлы и ставим их на правильное место
 		let i=0;
 		for (let y=0;y<this.size;y++) {			
@@ -264,6 +266,7 @@ var puzzle = {
 				objects.puzzle_cells[i].rotation=0;
 				objects.puzzle_cells[i].cell_ok.visible=false;
 				objects.puzzle_cells[i].cell_selected.visible=false;
+				
 				i++;				
 			}
 		}		
@@ -319,8 +322,8 @@ var puzzle = {
 			return;
 		
 		
-		if (this.hints_amount===0)
-			return;
+		//if (this.hints_amount===0)
+		//	return;
 		this.hints_amount--;
 		
 		let rnd_cell=irnd(1,this.size*this.size)-1;	
@@ -368,6 +371,10 @@ var puzzle = {
 					objects.puzzle_cells[i].finish_move();				
 					objects.puzzle_cells[i].visible=false;
 				}
+				
+				objects.mask_bcg.visible = false;
+				objects.main_bcg.visible = true;
+				
 				state="";
 			}			
 		}
@@ -385,18 +392,20 @@ var puzzle = {
 				
 				//если целевая ячейка соответствует правильной то показываем на ячейке соответствующий значек
 				if (this.ec1.cur_id===this.ec1.true_id) {
-					anim.add_pos({obj: this.ec1.cell_ok,param: 'alpha',vis_on_end: true,func: 'easeOutBack',val: [0,0.5],	speed: 0.03});					
+					anim.add_pos({obj: this.ec1.cell_ok,param: 'alpha',vis_on_end: true,func: 'easeOutBack',val: [0,0.5],	speed: 0.03});
+					game_res.resources.open.sound.play();					
 					this.completed++;
 				}
 				
 				if (this.ec2.cur_id===this.ec2.true_id) {
 					anim.add_pos({obj: this.ec2.cell_ok,param: 'alpha',vis_on_end: true,func: 'easeOutBack',val: [0,0.5],	speed: 0.03});					
+					game_res.resources.open.sound.play();		
 					this.completed++;
 				}
 
 				//проверяем что паззл собран
 				if (this.completed===(this.size*this.size))		
-					game.puzzle_complete();
+					game.process_finish(1)
 					
 
 				state="game";
@@ -419,8 +428,12 @@ var puzzle = {
 	cell_down : function(ind) {
 				
 				
+		game_res.resources.move.sound.play();
+		
 		if (state!=="game")
 			return;
+		
+		
 		
 		//если выбрана завершенная ячейка то выходим
 		if (objects.puzzle_cells[ind].cur_id===objects.puzzle_cells[ind].true_id)
@@ -438,6 +451,7 @@ var puzzle = {
 
 		//если уже выделена одная ячейка
 		if (this.ec1!==null) {
+			
 			
 			//начинаем процесс перемещения клеток
 			this.ec2=objects.puzzle_cells[ind];
@@ -527,6 +541,7 @@ var big_message={
 		
 		any_dialog_active=0;
 		anim.add_pos({obj:objects.big_message_cont,param:'y',vis_on_end:false,func:'easeInBack',val:['sy', 	800],	speed:0.05});
+		game_res.resources.close.sound.play();
 		
 	},
 	
@@ -550,6 +565,29 @@ var big_message={
 	
 }
 
+var mini_message = {
+	
+	
+	show: function(text) {
+		
+		objects.mini_message_text.text=text;
+		anim.add_pos({obj:objects.mini_message_cont,param:'y',vis_on_end:true,func:'easeOutBack',val:[-180, 	'sy'],	speed:0.02});
+		
+		setTimeout(function() {			
+			mini_message.close();
+		},2000)
+			
+	},
+	
+	close : function() {
+		
+		anim.add_pos({obj:objects.mini_message_cont,param:'y',vis_on_end:false,func:'easeInBack',val:['sy', 	-180],	speed:0.05});
+		
+	}
+
+	
+}
+
 var pbd = {
 	
 	
@@ -563,6 +601,8 @@ var pbd = {
 	close : function () {
 		
 		
+		game_res.resources.close.sound.play();
+		
 		any_dialog_active=0;
 		anim.add_pos({obj:objects.pbd_cont,param:'y',vis_on_end:false,func:'easeInBack',val:['sy', 	800],	speed:0.05});
 
@@ -571,24 +611,15 @@ var pbd = {
 	
 	ok_down : function () {		
 		
-		if (my_data.balance >= 100) {
-			
-			//обновляем локально
-			my_data.balance-=100;
-			my_data.fpc+=3;
-			
-			//обновляем на сервере
-			firebase.database().ref("players/"+my_data.uid+"/fpc").set(my_data.fpc);
-			firebase.database().ref("players/"+my_data.uid+"/balance").set(my_data.balance);
-			
-			//показываем сколько осталось смен картинок
-			objects.pic_changes_text.text=my_data.fpc;
-			
-			//обновляем баланс
-			objects.balance_header.text = my_data.balance;
-			
-		}
-			
+
+		my_data.fpc+=3;
+		
+		//обновляем на сервере
+		firebase.database().ref("players/"+my_data.uid+"/fpc").set(my_data.fpc);
+		
+		//показываем сколько осталось смен картинок
+		objects.pic_changes_text.text=my_data.fpc;
+				
 		
 		any_dialog_active=0;
 		anim.add_pos({obj:objects.pbd_cont,param:'y',vis_on_end:false,func:'easeInBack',val:['sy', 	800],	speed:0.05});
@@ -877,6 +908,8 @@ var main_menu = {
 	
 	activate : function() {
 		
+		//puzzle_complete_message.show();
+		
 		//добавляем элементы главного меню
 		anim.add_pos({obj: objects.main_buttons_cont,param: 'x',vis_on_end: true,func: 'linear',val: [450,'sx'],	speed: 0.03});				
 		anim.add_pos({obj: objects.main_header,param: 		'x',vis_on_end: true,func: 'linear',val: [450,'sx'],	speed: 0.03	});
@@ -892,7 +925,7 @@ var main_menu = {
         if (objects.main_buttons_cont.ready === false || any_dialog_active === 1 || activity_on === 1)
             return;
 		
-
+		game_res.resources.click.sound.play();
 		
 		//переходим в следующее меню
 		menu2.activate(this.first_run);
@@ -910,7 +943,7 @@ var main_menu = {
             return;
 		}
 		
-		//gres.click.sound.play();
+		game_res.resources.click.sound.play();
 		
 		this.hide();
 		lb.activate();
@@ -945,6 +978,8 @@ var main_menu = {
 			return;
 		}
 			
+		
+		game_res.resources.click.sound.play();
 		
 		any_dialog_active=1;	
 		
@@ -998,7 +1033,7 @@ var menu2= {
 		g_process=this.process;
 		
 		if (init===1) {
-			this.change_board_down(4);			
+			this.change_board_down(5, 0);			
 			this.set_random_pic(0);		
 		}
 		else {
@@ -1006,8 +1041,9 @@ var menu2= {
 		}		
 		
 		
-		//обновляем баланс
-		objects.balance_header.text = my_data.balance;
+		//обновляем рекорд
+		objects.record_header.text = my_data.record;
+		
 		
 		//если ошибка при зазгрузе то показыаем кнопку бесплатной перезазгрузки
 		if (this.pic_load_error === 1)
@@ -1024,6 +1060,20 @@ var menu2= {
 		//показываем сколько осталось смен картинок
 		objects.pic_changes_text.text=my_data.fpc;
 		
+		//получаем и отображаем глобальный топ игры чтобы потом использовать
+		firebase.database().ref("players").orderByChild('record').limitToLast(1).once('value').then((snapshot) => {
+			
+			let res = snapshot.val();
+			if (res===null) {
+			  console.log("Что-то не получилось получить данные о топе");
+			}
+			else {			
+				
+				let name = Object.keys(res);				
+				global_record = res[name[0]].record;
+			}
+		});
+		
 	},
 	
 	set_random_pic: function(update_price=0) {
@@ -1034,6 +1084,9 @@ var menu2= {
 		PIXI.utils.BaseTextureCache={};	
 		objects.puzzle_img.texture=PIXI.Texture.BLACK;
 		objects.puzzle_pic_updating.visible=true;
+		
+		
+		
 		
 		//загружаем картинку из интернета
 		let loader=new PIXI.Loader();
@@ -1046,6 +1099,9 @@ var menu2= {
 				
 				console.log("Не получилось загрузить")
 				objects.puzzle_pic_updating.visible=false;
+				
+				
+				game_res.resources.blocked.sound.play();
 				
 				big_message.show('Ошибка','Не получилось загрузить картинку','Побробуйте снова', function(){big_message.close()},null);
 				
@@ -1062,7 +1118,8 @@ var menu2= {
 				anim.add_pos({obj: objects.puzzle_img,param: 'alpha',vis_on_end: true,func: 'linear',val: [0,1],	speed: 0.03});	
 				objects.puzzle_pic_updating.visible=false;
 							
-
+				game_res.resources.popup.sound.play();
+				
 				//убираем кнопку бесплатной перезагрузки если она была
 				objects.reload_bad_pic_button.visible=false;		
 				
@@ -1076,6 +1133,12 @@ var menu2= {
 	
 		if (objects.buttons_cont2.ready===false || objects.puzzle_pic_updating.visible===true || any_dialog_active===1  || activity_on === 1)
 			return;
+		
+		
+		
+		
+		game_res.resources.click.sound.play();
+		
 
 		if (my_data.fpc<=0) {			
 			pbd.show();
@@ -1095,20 +1158,31 @@ var menu2= {
 		if (objects.buttons_cont2.ready === false || objects.puzzle_pic_updating.visible === true || any_dialog_active === 1 || this.pic_load_error === 1 || activity_on === 1)
 			return;
 		
+		game_res.resources.click.sound.play();
+		
 		this.close();
 		game.activate();
 		
 	},
 	
-	change_board_down : function(size) {
+	change_board_down : function(size, user_action = 1) {
 		
 		
 		if (any_dialog_active === 1 || this.pic_load_error === 1 || activity_on === 1)
 			return;
 		
+		if (user_action === 1)
+			game_res.resources.click2.sound.play();
+		
 		//если нажали на туже сетку то выходим
 		if (size===puzzle.size)
 			return;
+		
+		
+		if (size === 5)
+			objects.puzzle_info.text='В данном режиме\nдоступна бонусная игра!'
+		else
+			objects.puzzle_info.text='Бонусная игра\nв данном режиме не доступна!'
 		
 		let old_width=objects['net_'+puzzle.size].width;
 
@@ -1119,7 +1193,7 @@ var menu2= {
 		puzzle.set_size(size);	
 
 		//появление новой сетки
-		anim.add_pos({obj: objects['net_'+puzzle.size],param: 'alpha',		vis_on_end: true,func: 'linear',val: [0,1],	speed: 0.03	});
+		//anim.add_pos({obj: objects['net_'+puzzle.size],param: 'alpha',		vis_on_end: true,func: 'linear',val: [0,1],	speed: 0.03	});
 
 		//обновляем размер и положение картинки		
 		anim2.add(objects.puzzle_img,{
@@ -1129,7 +1203,17 @@ var menu2= {
 			height:[objects.puzzle_img.height,puzzle.width],			
 		}, true, 0.03,'easeOutBack');
 		
-		//обновляем размер и положение картинки		
+		//обновляем размер и положение маски
+		anim2.add(objects.image_mask,{
+			x:[objects.puzzle_img.x,puzzle.x],
+			y:[objects.puzzle_img.y,puzzle.y],
+			width:[objects.puzzle_img.width,puzzle.width],
+			height:[objects.puzzle_img.height,puzzle.width],			
+		}, true, 0.03,'easeOutBack');
+		
+		
+		
+		//обновляем размер и положение сетки		
 		anim2.add(objects['net_'+puzzle.size],{
 			width:[old_width,objects['net_'+puzzle.size].width],
 			height:[old_width,objects['net_'+puzzle.size].width],
@@ -1141,10 +1225,7 @@ var menu2= {
 		//устанавливаем фрейм
 		objects.selection_frame.x=objects['f'+puzzle.size+'_button'].x;
 		
-		//вычисляем максимальную награду
-		let max_rew=p_data_x[puzzle.size-3].sec_reward+p_data_x[puzzle.size-3].swap_reward;
-		
-		objects.puzzle_info.text=`Подсказок: ${puzzle.hints_amount}\nМаксимальная награда: ${max_rew}`;
+
 		
 
 
@@ -1155,6 +1236,8 @@ var menu2= {
 		if (objects.puzzle_pic_updating.visible===true || objects.puzzle_img.ready===false || any_dialog_active===1 || activity_on === 1)
 			return;
 		
+		game_res.resources.click.sound.play();
+		
 		this.close();
 		main_menu.activate();
 		
@@ -1162,6 +1245,7 @@ var menu2= {
 	
 	reload_bad_pic : function () {
 		
+		game_res.resources.click.sound.play();
 		this.set_random_pic(0);	
 		
 	},
@@ -1216,13 +1300,15 @@ var	show_ad=function(){
 var game = {
 
 	start_time: 0,
-	swaps_made:0,
 	timer : 0,
+	bonus : 1,
 	last_time_reward : 0,
 	finish_params : {3 :[30,0.025], 4:[25,0.03], 5:[20,0.035]},
     process: function () {},
 
     activate: function () {
+		
+		game_res.resources.game_start.sound.play();
 		
 		//просто показываем все ячейки в правильном порядке
 		puzzle.init();
@@ -1234,54 +1320,62 @@ var game = {
 		anim.add_pos({obj: objects['net_'+puzzle.size],param: 'alpha',		vis_on_end: true,func: 'linear',val: [0,1],	speed: 0.03	});
 			
 		//добавляем кнопки
-		anim.add_pos({obj: objects.game_buttons_cont,param: 		'x',vis_on_end: true,func: 'linear',val: [450,'sx'],	speed: 0.03	});
+		anim.add_pos({obj: objects.game_buttons_cont,param: 		'x',vis_on_end: true,func: 'linear',val: [450,'sx'],	speed: 0.03});
 		
 		//добавляем прогресс 
-		anim.add_pos({obj: objects.rewards_bcg,param: 		'x',vis_on_end: true,func: 'linear',val: [450,'sx'],	speed: 0.03	});
-		anim.add_pos({obj: objects.reward_time_slider,param: 		'x',vis_on_end: true,func: 'linear',val: [450,'sx'],	speed: 0.03	});
-		anim.add_pos({obj: objects.reward_swap_slider,param: 		'x',vis_on_end: true,func: 'linear',val: [450,'sx'],	speed: 0.03	});
+		if (puzzle.size === 5)
+			anim.add_pos({obj: objects.progress_cont,param: 		'x',vis_on_end: true,func: 'linear',val: [450,'sx'],	speed: 0.03	});
+
+		//восстанавливаем прогрессы
+		anim.add_scl({obj: objects.time_slider,param: 'x',vis_on_end: true,func: 'easeInOutQuad',val: [objects.time_slider.scale.x,1],	speed: 0.01, callback : function() {
+						
+			//фиксируем начало игры
+			game.start_time=game_tick;		
 		
+			//утсанавливаем процессинговую функцию
+			g_process=function(){game.process()};			
+			
+		}});
 		
 		//показываем сколько подсказок есть
 		objects.hint_button_text.text=puzzle.hints_amount;
 
-		this.swaps_made=0;
-		
+	
 		//устанавливаем начальные значения ревордов
-		objects.reward_time_text.text = p_data_x[puzzle.size - 3].sec_reward;
-		objects.reward_swap_text.text = p_data_x[puzzle.size - 3].swap_reward;
-				
-		//фиксируем начало игры
-		this.start_time=game_tick;		
-		
-		//утсанавливаем процессинговую функцию
-		g_process=function(){game.process()};
-	},
-	
-	puzzle_complete: function() {
-		
+		//objects.reward_time_text.text = p_data_x[puzzle.size - 3].sec_reward;
 
-		//утсанавливаем процессинговую функцию которая вращает фигуру
-		g_process=function(){game.process_finish(1)};
+		//бонус акивирован но он может быть отменен по ходу игры
+		this.bonus = 1;
 		
+		objects.main_bcg.visible = false;
+		objects.mask_bcg.visible = true;
+		objects.mask_bcg.texture = gres['mask_bcg'+puzzle.size].texture;
+				
+
 	},
-	
+		
 	back_button_down: function() {
 		
 		if (any_dialog_active===1 || activity_on==1)
 			return;
 		
+		game_res.resources.lose.sound.play();
+		
 		puzzle.start_back_shuffle();
-		big_message.show('Инфа', 'Игра не завершена', 'Но можно начать снова');
+		big_message.show('Конец', 'Вы отменили игру!\nПрогресс потерян(((', '');
+		cur_progress =-1;
 		this.close();
 		menu2.activate(0);
 	},
 	
-	finish_game : function () {
+	finish_game : function () {		
+		
+		//показыаем рекламу
+		show_ad();
 		
 		puzzle.hide();
 		this.close();
-		menu2.activate(1);
+		menu2.activate(1);	
 		
 	},
 	
@@ -1289,21 +1383,36 @@ var game = {
 	
 		if (any_dialog_active===1 || activity_on==1)
 			return;
+		
+		//this.process_finish(1);
 	
-		if (puzzle.show_hint()===true)
-			objects.hint_button_text.text=puzzle.hints_amount;
+		if (puzzle.show_hint()===true) {
+			
+			game_res.resources.hint.sound.play();
+			objects.hint_button_text.text=puzzle.hints_amount;			
+		} else {
+			
+			game_res.resources.blocked.sound.play();
+		}
+
 	},
 	
 	process : function () {
 		
-		let rew_data = this.get_sec_reward_data();
+		//показыаем прогресс только для картинки 5х5
+		if (puzzle.size !== 5)
+			return;
 		
-		objects.reward_time_slider.x = - 10 + 390 * rew_data[1];			
+		
+		//вычисляем бонусное время
+		let rew_data = this.get_sec_reward_data();		
+		objects.time_slider.scale.x =  rew_data[1];
+		
+		if (rew_data[0] === 0 && this.bonus === 1) {			
+			big_message.show("(((", "Бонусное время закончилось", "Прогресс потерян(((");
+			this.bonus =0;
+		}
 
-		objects.reward_time_text.text = rew_data[0];
-		
-		this.last_time_reward = rew_data[0];
-		
 	},
 	
 	process_finish : function (init) {
@@ -1313,6 +1422,9 @@ var game = {
 			activity_on=1;
 		
 			this.timer=0;
+			
+			objects.main_bcg.visible = true;
+			objects.mask_bcg.visible = false;
 		
 			g_process=function(){game.process_finish(0)};
 				
@@ -1321,39 +1433,32 @@ var game = {
 			
 		}
 		
-		for (let p =0 ; p < puzzle.size * puzzle.size ; p ++) {
-						
+		//постепенно убираем все карточки
+		for (let p =0 ; p < puzzle.size * puzzle.size ; p ++) {						
 			if (this.timer === (p*this.finish_params[puzzle.size][0]+90)) {
 				
 				//обновляем размер и положение картинки		
 				anim2.add(objects.puzzle_cells[p],{
-					x:[objects.puzzle_cells[p].x,225],
-					y:[objects.puzzle_cells[p].y,150],
-					rotation:[objects.puzzle_cells[p].rotation,0.5],
+					rotation:[objects.puzzle_cells[p].rotation,0.8],
 					width:[objects.puzzle_cells[p].width,0],
 					height:[objects.puzzle_cells[p].height,0],					
 				}, false, this.finish_params[puzzle.size][1], 'easeInBack');		
+				
+				game_res.resources.fin.sound.play();
 			}				
 		}
 				
-		if (this.timer === (puzzle.size * puzzle.size * this.finish_params[puzzle.size][0] + 90) ) {
-					
-			let speed_rew=this.last_time_reward;
-			let swap_rew=this.get_swap_reward_data()[0];
+		if (this.timer === puzzle.size * puzzle.size * this.finish_params[puzzle.size][0] + 90)
+		{
+								
+			//анализируем результаты игры
+			this.process_game_results();
 			
-			//вычисляем и отображаем награду за время
-			objects.game_complete_time_rew.text='Бонус за время: +' +speed_rew +'\nБонус за точность: +' + swap_rew;
-			
-			//вычисляем и отображаем награду за свопы
-			let total_reward=speed_rew + swap_rew;
-			objects.game_complete_swap_rew.text='Всего: +' + (speed_rew + swap_rew);	
-
-			//обновляем данные и в базе данных тоже
-			my_data.balance += total_reward;
-			firebase.database().ref("players/"+my_data.uid+"/balance").set(my_data.balance);
-		
 			//показываем сообщение
-			puzzle_complete_message.show();		
+			puzzle_complete_message.show();					
+			
+			//делаем звук
+			game_res.resources.win.sound.play();
 		
 			activity_on=0;		
 		}		
@@ -1364,21 +1469,80 @@ var game = {
 		this.timer++;
 	},
 	
-	get_swap_reward_data : function () {
+	process_game_results : function () {
 		
-		let max_swaps = p_data_x[puzzle.size - 3].swaps;		
+		
+		
+		
+		//сначала показываем все
+		objects.rainbow.visible = true;
+		objects.cur_progress_point.visible = true;
+		objects.top_record_point.visible = true;
+		objects.my_record_point.visible = true;
+		
+		for (let i =0 ; i <25 ; i++ )
+			objects.fin_points[i].visible = true;	
+		
+		//это бонусная игра
+		if (puzzle.size === 5) {
+			
+			//если бонус есть то увеличиваем прогремм
+			if (this.bonus === 1)
+				cur_progress++;
+			
+			if (cur_progress === -1) {
 				
-		let perc = 1 - this.swaps_made / max_swaps;
-		let cur_reward = Math.round(p_data_x[puzzle.size - 3].swap_reward * perc);		
+				objects.game_complete_0.text="";					
+				objects.game_complete_1.text="Паззл собран!\nНо бонус и прогресс потеряны(((";	
+				objects.rainbow.visible = false;
+			}
+			
+			if (cur_progress !== -1) {
+				
+				
+				objects.game_complete_0.text="Паззл собран!\nВы уложились в бонусное время!";				
+				objects.game_complete_1.text="";					
+
+			
+				//если новый личный рекорд
+				if (cur_progress > my_data.record) {					
+					//добавить новый рекорд
+					my_data.record=cur_progress;
+					
+					mini_message.show("Новый личный рекорд!");
+					
+					//записываем в файербейс
+					firebase.database().ref("players/"+my_data.uid+"/record").set(my_data.record);
+				}	
+				
+				//если новый глобальный рекорд
+				if (cur_progress > global_record) {					
+					//добавить новый рекорд
+					global_record=cur_progress;
+					
+					mini_message.show("Новый рекорд игры!");
+				}			
+			}
+		} 
 		
-		if (perc<0) {
-			perc = 0;
-			cur_reward = 0;			
+		
+		//это не бонусная игра
+		if (puzzle.size === 3 || puzzle.size === 4) {
+			
+			objects.game_complete_0.text="";	
+			objects.game_complete_1.text="Паззл собран!";	
+			
+			objects.cur_progress_point.visible = false;
+			objects.top_record_point.visible = false;
+			objects.my_record_point.visible = false;
+			
+			for (let i =0 ; i <25 ; i++ )
+				objects.fin_points[i].visible = false;	
+			
 		}
-		
-		return [cur_reward, perc];
+
 	},
-	
+		
 	get_sec_reward_data : function () {
 		
 		//контролируем уменишение времени и соотетственно возможной награды
@@ -1399,30 +1563,21 @@ var game = {
 	
 	made_a_swap : function () {
 		
-		this.swaps_made++;		
-		
-		let rew_data = this.get_swap_reward_data();
-		
-		let new_x_pos = - 10 + 390 * rew_data[1];
-		
-		anim.add_pos({obj: objects.reward_swap_slider,param: 'x',vis_on_end: true,func: 'easeInOutQuad',val: ['x',new_x_pos],	speed: 0.05});
+		this.start_time -= 1; 
+				
 
-		objects.reward_swap_text.text = rew_data[0];		
 		
 	},
 	
 	close: function() {		
+	
+		
 		
 		//убираем кнопки
 		anim.add_pos({obj: objects.game_buttons_cont,param: 		'x',vis_on_end: false,func: 'linear',val: ['sx',-450],	speed: 0.03	});
-		
-		
-		anim.add_pos({obj: objects.rewards_bcg,param: 		'x',vis_on_end: false,func: 'linear',val: ['x',-450],	speed: 0.03	});
-		anim.add_pos({obj: objects.reward_time_slider,param: 		'x',vis_on_end: false,func: 'linear',val: ['x',-450],	speed: 0.03	});
-		anim.add_pos({obj: objects.reward_swap_slider,param: 		'x',vis_on_end: false,func: 'linear',val: ['x',-450],	speed: 0.03	});
-		
-		
-			
+
+		anim.add_pos({obj: objects.progress_cont,param: 		'x',vis_on_end: false,func: 'linear',val: ['x',-450],	speed: 0.03	});
+
 	}
 	
 }
@@ -1430,23 +1585,58 @@ var game = {
 var puzzle_complete_message= {
 	
 	show : function() {
+				
+		
+
+		
+		if (puzzle.size === 5) {
+			
+			for (let i=0;i<25;i++) {			
+				objects.fin_points[i].tint = 0xffffff;
+				
+				if (cur_progress >= i)
+					objects.fin_points[i].tint = 0x443311;	
+			}			
+						
+			objects.cur_progress_point.x=objects.fin_points[cur_progress].x;
+			objects.cur_progress_point.y=objects.fin_points[cur_progress].y+10;	
+		
+			
+			objects.my_record_point.x=objects.fin_points[my_data.record].x;
+			objects.my_record_point.y=objects.fin_points[my_data.record].y;
+			objects.fin_points[my_data.record].tint = 0xFF00FF;
+			
+			objects.top_record_point.x=objects.fin_points[global_record].x;
+			objects.top_record_point.y=objects.fin_points[global_record].y;
+			objects.fin_points[global_record].tint = 0xFF0000;		
+		}
 		
 		anim.add_pos({obj: objects.game_complete_cont,param: 'x',		vis_on_end: true,func: 'easeOutBack',val: [-500,'sx'],	speed: 0.03	});
 		anim.add_pos({obj: objects.rainbow,param: 'alpha',		vis_on_end: true,func: 'linear',val: [0,1],	speed: 0.03	});
-		objects.rainbow.visible=true;
+		
+
 		any_dialog_active=1;
 	},
 	
 	close : function () {
+		
 		any_dialog_active=0;		
 		anim.add_pos({obj: objects.game_complete_cont,param: 'x',		vis_on_end: false,func: 'easeInBack',val: ['sx',500],	speed: 0.03	});
 		game.finish_game();
 		anim.add_pos({obj: objects.rainbow,param: 'alpha',		vis_on_end: false,func: 'linear',val: ['alpha',0],	speed: 0.03	});
+		
+		//показыаем рекламу
+		show_ad();
+		
+		game_res.resources.close.sound.play();
 	},
 	
 	process : function () {
 		if (objects.rainbow.visible===true)
 			objects.rainbow.rotation+=0.03;
+		
+		objects.top_record_point.rotation=Math.sin(game_tick*4)*0.1;
+		objects.my_record_point.rotation=Math.sin(game_tick*6)*0.1;
 	}
 	
 }
@@ -1458,258 +1648,251 @@ function vis_change() {
 	}	
 }
 
-var auth= new Promise((resolve, reject)=>{
-		
+var auth = function() {
 	
-	let help_obj = {
-		
-		loadScript : function(src) {
-		  return new Promise((resolve, reject) => {
-			const script = document.createElement('script')
-			script.type = 'text/javascript'
-			script.onload = resolve
-			script.onerror = reject
-			script.src = src
-			document.head.appendChild(script)
-		  })
-		},
-				
-		vkbridge_events: function(e) {
+	return new Promise((resolve, reject)=>{
 
-			if (e.detail.type === 'VKWebAppGetUserInfoResult') {
-				
-				my_data.name 	= e.detail.data.first_name + ' ' + e.detail.data.last_name;
-				my_data.uid 	= "vk"+e.detail.data.id;
-				my_data.pic_url = e.detail.data.photo_100;			
-				
-				console.log(`Получены данные игрока от VB MINIAPP:\nимя:${my_data.name}\nid:${my_data.uid}\npic_url:${my_data.pic_url}`);
-				help_obj.process_results();			
-			}	
-		},
-				
-		init: function() {
-			
-			//инициируем файербейс
-			if (firebase.apps.length===0) {
-				firebase.initializeApp({
-					apiKey: "AIzaSyDUYz_Rylw18_CG5Oiop8fb6OYpUaR3FKw",
-					authDomain: "puzzle-db6c5.firebaseapp.com",
-					databaseURL: "https://puzzle-db6c5-default-rtdb.europe-west1.firebasedatabase.app",
-					projectId: "puzzle-db6c5",
-					storageBucket: "puzzle-db6c5.appspot.com",
-					messagingSenderId: "362880721960",
-					appId: "1:362880721960:web:77016026f53c967b84011d"
-				});		
-			}
-		
-			
-			let s = window.location.href;
+		let help_obj = {
 
-			//-----------ЯНДЕКС------------------------------------
-			if (s.includes("yandex")) {						
-				Promise.all([
-					this.loadScript('https://yandex.ru/games/sdk/v2')
-				]).then(function(){
-					help_obj.yandex();	
-				});
-				return;
-			}
-			
-					
-			//-----------ВКОНТАКТЕ------------------------------------
-			if (s.includes("vk.com")) {			
-				Promise.all([
-					this.loadScript('https://vk.com/js/api/xd_connection.js?2'),
-					this.loadScript('//ad.mail.ru/static/admanhtml/rbadman-html5.min.js'),
-					this.loadScript('//vk.com/js/api/adman_init.js'),
-					this.loadScript('https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js')	
-					
-				]).then(function(){
-					help_obj.vk()
-				});
-				return;
-			}	
-			
+			loadScript : function(src) {
+			  return new Promise((resolve, reject) => {
+				const script = document.createElement('script')
+				script.type = 'text/javascript'
+				script.onload = resolve
+				script.onerror = reject
+				script.src = src
+				document.head.appendChild(script)
+			  })
+			},
 
-			//-----------ЛОКАЛЬНЫЙ СЕРВЕР--------------------------------
-			if (s.includes("192.168")) {			
-				help_obj.debug();	
-				return;
-			}
-					
-			
-			//-----------НЕИЗВЕСТНОЕ ОКРУЖЕНИЕ---------------------------
-			help_obj.unknown();
-			
-		},
-		
-		yandex: function() {
-		
-			game_platform="YANDEX";
-			if(typeof(YaGames)==='undefined')
-			{		
-				help_obj.local();	
-			}
-			else
-			{
-				//если sdk яндекса найден
-				YaGames.init({}).then(ysdk => {					
-					
-					//фиксируем SDK в глобальной переменной
-					window.ysdk=ysdk;				
-					
-					//запрашиваем данные игрока
-					return ysdk.getPlayer();
-					
-					
-				}).then((_player)=>{
-					
-					my_data.name 	= _player.getName();
-					my_data.uid 	= _player.getUniqueID().replace(/\//g, "Z");	
-					my_data.pic_url = _player.getPhoto('medium');		
-					
-					console.log(`Получены данные игрока от яндекса:\nимя:${my_data.name}\nid:${my_data.uid}\npic_url:${my_data.pic_url}`);
-					
-					//если личные данные не получены то берем первые несколько букв айди
-					if (my_data.name=="" || my_data.name=='')
-						my_data.name=my_data.uid.substring(0,5);
-					
-					help_obj.process_results();		
-					
-				}).catch((err)=>{
-					
-					//загружаем из локального хранилища
+			vkbridge_events: function(e) {
+
+				if (e.detail.type === 'VKWebAppGetUserInfoResult') {
+
+					my_data.name 	= e.detail.data.first_name + ' ' + e.detail.data.last_name;
+					my_data.uid 	= "vk"+e.detail.data.id;
+					my_data.pic_url = e.detail.data.photo_100;
+
+					//console.log(`Получены данные игрока от VB MINIAPP:\nимя:${my_data.name}\nid:${my_data.uid}\npic_url:${my_data.pic_url}`);
+					help_obj.process_results();
+				}
+			},
+
+			init: function() {
+
+				g_process=function() { help_obj.process()};
+
+				let s = window.location.href;
+
+				//-----------ЯНДЕКС------------------------------------
+				if (s.includes("yandex")) {
+					Promise.all([
+						this.loadScript('https://yandex.ru/games/sdk/v2')
+					]).then(function(){
+						help_obj.yandex();
+					});
+					return;
+				}
+
+
+				//-----------ВКОНТАКТЕ------------------------------------
+				if (s.includes("vk.com")) {
+					Promise.all([
+						this.loadScript('https://vk.com/js/api/xd_connection.js?2'),
+						this.loadScript('//ad.mail.ru/static/admanhtml/rbadman-html5.min.js'),
+						this.loadScript('//vk.com/js/api/adman_init.js'),
+						this.loadScript('https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js')
+
+					]).then(function(){
+						help_obj.vk()
+					});
+					return;
+				}
+
+
+				//-----------ЛОКАЛЬНЫЙ СЕРВЕР--------------------------------
+				if (s.includes("192.168")) {
+					help_obj.debug();
+					return;
+				}
+
+
+				//-----------НЕИЗВЕСТНОЕ ОКРУЖЕНИЕ---------------------------
+				help_obj.unknown();
+
+			},
+
+			yandex: function() {
+
+				game_platform="YANDEX";
+				if(typeof(YaGames)==='undefined')
+				{
 					help_obj.local();
-					
-				})
-			}	
-		},
-				
-		vk: function() {
-			
-			game_platform="VK";		
-			vkBridge.subscribe((e) => this.vkbridge_events(e)); 
-			vkBridge.send('VKWebAppInit');	
-			vkBridge.send('VKWebAppGetUserInfo');
-			
-		},	
+				}
+				else
+				{
+					//если sdk яндекса найден
+					YaGames.init({}).then(ysdk => {
 
-		debug: function() {	
-		
-			game_platform = "debug";
-			let uid = prompt('Отладка. Введите ID', 100);
-			
-			my_data.name = my_data.uid = "debug" + uid;
-			my_data.pic_url = "https://ibb.co/GCW6vg0";	
-			
-			help_obj.process_results();
+						//фиксируем SDK в глобальной переменной
+						window.ysdk=ysdk;
 
-		},
-		
-		local: function(repeat = 0) {
-			
-			game_platform="LOCAL";
-					
-			//ищем в локальном хранилище
-			let local_uid = localStorage.getItem('uid');
-			
-			//здесь создаем нового игрока в локальном хранилище
-			if (local_uid===undefined || local_uid===null) {
-				
-				console.log("Создаем нового локального пользователя");
-				
-				let rnd_names=["Бегемот","Жираф","Зебра","Тигр","Ослик","Мамонт","Волк","Лиса","Мышь","Сова","Слон","Енот","Кролик","Бизон","Пантера"];
-				let rnd_num=Math.floor(Math.random()*rnd_names.length)
-				let rand_uid=Math.floor(Math.random() * 99999);
-				
-				my_data.name 		=	rnd_names[rnd_num]+rand_uid;
-				my_data.uid			=	"ls"+rand_uid;	
-				my_data.pic_url		=	'https://avatars.dicebear.com/v2/male/'+irnd(10,10000)+'.svg';;	
-				
-				localStorage.setItem('uid',my_data.uid);		
-				help_obj.process_results();
-			}
-			else
-			{
-				console.log(`Нашли айди в ЛХ (${local_uid}). Загружаем остальное из ФБ...`);
-				
-				my_data.uid = local_uid;	
-				my_data.uid = local_uid;	
-				
-				//запрашиваем мою информацию из бд или заносим в бд новые данные если игрока нет в бд
-				firebase.database().ref("players/"+my_data.uid).once('value').then((snapshot) => {		
-								
-					var data=snapshot.val();
-					
-					//если на сервере нет таких данных
-					if (data === null) {
-												
-						//если повтоно нету данных то выводим предупреждение
-						if (repeat === 1)
-							alert('Какая-то ошибка');
-						
-						console.log(`Нашли данные в ЛХ но не нашли в ФБ, повторный локальный запрос...`);	
+						//запрашиваем данные игрока
+						return ysdk.getPlayer();
 
-						
-						//повторно запускаем локальный поиск						
-						localStorage.clear();
-						help_obj.local(1);	
-							
 
-						
-					} else {						
-						
-						my_data.pic_url = data.pic_url;
-						my_data.name = data.name;
+					}).then((_player)=>{
+
+						my_data.name 	= _player.getName();
+						my_data.uid 	= _player.getUniqueID().replace(/\//g, "Z");
+						my_data.pic_url = _player.getPhoto('medium');
+
+						//console.log(`Получены данные игрока от яндекса:\nимя:${my_data.name}\nid:${my_data.uid}\npic_url:${my_data.pic_url}`);
+
+						//если личные данные не получены то берем первые несколько букв айди
+						if (my_data.name=="" || my_data.name=='')
+							my_data.name=my_data.uid.substring(0,5);
+
 						help_obj.process_results();
-					}
 
-				})	
+					}).catch((err)=>{
 
-			}
+						//загружаем из локального хранилища если нет авторизации в яндексе
+						help_obj.local();
 
+					})
+				}
+			},
+
+			vk: function() {
+
+				game_platform="VK";
+				vkBridge.subscribe((e) => this.vkbridge_events(e));
+				vkBridge.send('VKWebAppInit');
+				vkBridge.send('VKWebAppGetUserInfo');
+
+			},
+
+			debug: function() {
+
+				game_platform = "debug";
+				let uid = prompt('Отладка. Введите ID', 100);
+
+				my_data.name = my_data.uid = "debug" + uid;
+				my_data.pic_url = "https://sun9-73.userapi.com/impf/c622324/v622324558/3cb82/RDsdJ1yXscg.jpg?size=223x339&quality=96&sign=fa6f8247608c200161d482326aa4723c&type=album";
+
+				help_obj.process_results();
+
+			},
+
+			local: function(repeat = 0) {
+
+				game_platform="LOCAL";
+
+				//ищем в локальном хранилище
+				let local_uid = localStorage.getItem('uid');
+
+				//здесь создаем нового игрока в локальном хранилище
+				if (local_uid===undefined || local_uid===null) {
+
+					//console.log("Создаем нового локального пользователя");
+
+					let rnd_names=["Бегемот","Жираф","Зебра","Тигр","Ослик","Мамонт","Волк","Лиса","Мышь","Сова","Слон","Енот","Кролик","Бизон","Пантера"];
+					let rnd_num=Math.floor(Math.random()*rnd_names.length)
+					let rand_uid=Math.floor(Math.random() * 9999999);
+
+					my_data.name 		=	rnd_names[rnd_num]+rand_uid;
+					my_data.rating 		= 	1400;
+					my_data.uid			=	"ls"+rand_uid;
+					my_data.pic_url		=	'https://avatars.dicebear.com/v2/male/'+irnd(10,10000)+'.svg';
+
+					localStorage.setItem('uid',my_data.uid);
+					help_obj.process_results();
+				}
+				else
+				{
+					//console.log(`Нашли айди в ЛХ (${local_uid}). Загружаем остальное из ФБ...`);
 					
-		},
-		
-		unknown: function () {
-			
-			game_platform="unknown";
-			alert("Неизвестная платформа! Кто Вы?")
-			
-			//загружаем из локального хранилища
-			help_obj.local();		
-		},
-		
-		process_results: function() {
-			
+					my_data.uid = local_uid;	
+					
+					//запрашиваем мою информацию из бд или заносим в бд новые данные если игрока нет в бд
+					firebase.database().ref("players/"+my_data.uid).once('value').then((snapshot) => {		
 									
-			//отображаем итоговые данные
-			console.log(`Итоговые данные:\nПлатформа:${game_platform}\nимя:${my_data.name}\nid:${my_data.uid}\npic_url:${my_data.pic_url}`);								
-			
-			//обновляем базовые данные в файербейс так могло что-то поменяться
-			firebase.database().ref("players/"+my_data.uid+"/name").set(my_data.name);
-			firebase.database().ref("players/"+my_data.uid+"/pic_url").set(my_data.pic_url);
-			firebase.database().ref("players/"+my_data.uid+"/tm").set(firebase.database.ServerValue.TIMESTAMP);
+						var data=snapshot.val();
+						
+						//если на сервере нет таких данных
+						if (data === null) {
+													
+							//если повтоно нету данных то выводим предупреждение
+							if (repeat === 1)
+								alert('Какая-то ошибка');
+							
+							//console.log(`Нашли данные в ЛХ но не нашли в ФБ, повторный локальный запрос...`);	
+
+							
+							//повторно запускаем локальный поиск						
+							localStorage.clear();
+							help_obj.local(1);	
+								
+							
+						} else {						
+							
+							my_data.pic_url = data.pic_url;
+							my_data.name = data.name;
+							help_obj.process_results();
+						}
+
+					})	
+
+				}
 
 
-			
-			//вызываем коллбэк
-			resolve("ok");
+			},
+
+			unknown: function () {
+
+				game_platform="unknown";
+				alert("Неизвестная платформа! Кто Вы?")
+
+				//загружаем из локального хранилища
+				help_obj.local();
+			},
+
+			process_results: function() {
+
+
+				//отображаем итоговые данные
+				//console.log(`Итоговые данные:\nПлатформа:${game_platform}\nимя:${my_data.name}\nid:${my_data.uid}\npic_url:${my_data.pic_url}`);
+
+				//обновляем базовые данные в файербейс так могло что-то поменяться
+				firebase.database().ref("players/"+my_data.uid+"/name").set(my_data.name);
+				firebase.database().ref("players/"+my_data.uid+"/pic_url").set(my_data.pic_url);
+				firebase.database().ref("players/"+my_data.uid+"/tm").set(firebase.database.ServerValue.TIMESTAMP);
+
+				//вызываем коллбэк
+				resolve("ok");
+			},
+
+			process : function () {
+
+				objects.id_loup.x=20*Math.sin(game_tick*8)+90;
+				objects.id_loup.y=20*Math.cos(game_tick*8)+110;
+			}
 		}
-	}
+
+		help_obj.init();
+
+	});	
 	
-	help_obj.init();
-	
-});
+}
 
 var lb={
 	
 	add_game_to_vk_menu_shown:0,
-	cards_pos: [[10,300],[10,355],[10,410],[10,465],[10,520],[10,575],[10,630]],
+	cards_pos: [[20,300],[20,355],[20,410],[20,465],[20,520],[20,575],[20,630]],
 	
 	activate: function() {
-		
-	
+			
 		
 		anim.add_pos({obj:objects.lb_1_cont,param:'x',vis_on_end:true,func:'linear',val:[450,'sx'],	speed:0.03});
 		anim.add_pos({obj:objects.lb_2_cont,param:'x',vis_on_end:true,func:'linear',val:[450,'sx'],	speed:0.03});
@@ -1723,11 +1906,9 @@ var lb={
 			objects.lb_cards[i].x=this.cards_pos[i][0];
 			objects.lb_cards[i].y=this.cards_pos[i][1];	
 			objects.lb_cards[i].place.text=(i+4)+".";			
-		}
+		}		
 		
-		
-		this.update();
-		
+		this.update();		
 	},
 	
 	close: function() {
@@ -1739,8 +1920,7 @@ var lb={
 		anim.add_pos({obj:objects.lb_cards_cont,param:'x',vis_on_end:false,func:'linear',val:['x',-450],	speed:0.03});
 				
 				
-		objects.lb_back_button.visible=false;
-		
+	
 		//gres.close.sound.play();
 		
 		
@@ -1763,7 +1943,8 @@ var lb={
 		};	
 		
 		
-		//game_res.resources.click.sound.play();		
+		game_res.resources.click.sound.play();
+		
 		this.close();
 		main_menu.activate();
 		
@@ -1771,7 +1952,7 @@ var lb={
 	
 	update: function () {
 		
-		firebase.database().ref("players").orderByChild('balance').limitToLast(25).once('value').then((snapshot) => {
+		firebase.database().ref("players").orderByChild('record').limitToLast(25).once('value').then((snapshot) => {
 			
 			if (snapshot.val()===null) {
 			  console.log("Что-то не получилось получить данные о рейтингах");
@@ -1781,7 +1962,7 @@ var lb={
 				var players_array = [];
 				snapshot.forEach(players_data=> {			
 					if (players_data.val().name!=="" && players_data.val().name!=='')
-						players_array.push([players_data.val().name, players_data.val().balance, players_data.val().pic_url]);	
+						players_array.push([players_data.val().name, players_data.val().record, players_data.val().pic_url]);	
 				});
 				
 
@@ -1789,7 +1970,7 @@ var lb={
 				
 				
 				//загружаем аватар соперника
-				var loaderOptions = {loadType: PIXI.loaders.Resource.LOAD_TYPE.IMAGE};
+				var loaderOptions = {loadType: PIXI.LoaderResource.LOAD_TYPE.IMAGE};
 				var loader = new PIXI.Loader();
 								
 				var len=Math.min(10,players_array.length);
@@ -1807,12 +1988,12 @@ var lb={
 				//загружаем остальных
 				for (let i=3;i<10;i++) {
 					let fname=players_array[i][0];	
-					objects.lb_cards[i-3].full_name=fname;
+					//objects.lb_cards[i-3].full_name=fname;
 					
-					fname = cut_string(fname,objects.lb_cards[i-3].name.fontSize,180);
+					make_text(objects.lb_cards[i-3],fname,180);
 					
 					objects.lb_cards[i-3].name.text=fname;
-					objects.lb_cards[i-3].balance.text=players_array[i][1];					
+					objects.lb_cards[i-3].record.text=players_array[i][1];					
 					loader.add('leaders_avatar_'+i, players_array[i][2],loaderOptions);					
 					
 				};
@@ -1838,13 +2019,26 @@ var lb={
 function init_game_env() {
 			
 			
+	//инициируем файербейс
+	if (firebase.apps.length===0) {
+		firebase.initializeApp({
+			apiKey: "AIzaSyDUYz_Rylw18_CG5Oiop8fb6OYpUaR3FKw",
+			authDomain: "puzzle-db6c5.firebaseapp.com",
+			databaseURL: "https://puzzle-db6c5-default-rtdb.europe-west1.firebasedatabase.app",
+			projectId: "puzzle-db6c5",
+			storageBucket: "puzzle-db6c5.appspot.com",
+			messagingSenderId: "362880721960",
+			appId: "1:362880721960:web:77016026f53c967b84011d"
+		});
+	}
+						
 	document.getElementById("m_bar").outerHTML = "";
     document.getElementById("m_progress").outerHTML = "";
 
 	//короткое обращение к ресурсам
 	gres=game_res.resources;
 
-    app = new PIXI.Application({width: M_WIDTH, height: M_HEIGHT, antialias: false, backgroundAlpha: 0});
+    app = new PIXI.Application({width: M_WIDTH, height: M_HEIGHT, antialias: false, forceCanvas: false});
     document.body.appendChild(app.view);
 
     var resize = function () {
@@ -1920,10 +2114,9 @@ function init_game_env() {
             break;
         }
     }
-
 	
 	//загружаем данные
-    auth.then((val)=> {
+    auth().then((val)=> {
 		
 		return new Promise(function(resolve, reject) {
 			let loader=new PIXI.Loader();
@@ -1944,10 +2137,10 @@ function init_game_env() {
 		
 		
 		
-		if (data.balance === undefined)
-			my_data.balance = 0;
+		if (data.record === undefined)
+			my_data.record = 0;
 		else
-			my_data.balance = data.balance;
+			my_data.record = data.record;
 		
 		if (data.fpc === undefined)
 			my_data.fpc = 10;
@@ -1956,7 +2149,7 @@ function init_game_env() {
 		
 		
 		//устанавливаем баланс в попап
-		objects.id_balance.text=my_data.balance;	
+		objects.id_record.text=my_data.record;	
 			
 			
 		activity_on=0;	
@@ -1976,7 +2169,6 @@ function init_game_env() {
 	
     //запускаем главный цикл
     main_loop();
-
 }
 
 function load_resources() {
@@ -1997,6 +2189,18 @@ function load_resources() {
         if (load_list[i][0] == "sprite" || load_list[i][0] == "image")
             game_res.add(load_list[i][1], git_src+"res/" + load_list[i][1] + ".png");
 		
+	game_res.add('popup',git_src+'popup.wav');
+	game_res.add('click',git_src+'click.wav');
+	game_res.add('click2',git_src+'click2.wav');
+	game_res.add('close',git_src+'close.mp3');
+	game_res.add('lose',git_src+'lose.mp3');
+	game_res.add('hint',git_src+'hint.mp3');
+	game_res.add('win',git_src+'win.mp3');
+	game_res.add('move',git_src+'move.wav');
+	game_res.add('blocked',git_src+'blocked.mp3');
+	game_res.add('open',git_src+'open.mp3');
+	game_res.add('fin',git_src+'fin.mp3');
+	game_res.add('game_start',git_src+'game_start.wav');
 
     game_res.load(init_game_env);
     game_res.onProgress.add(progress);
