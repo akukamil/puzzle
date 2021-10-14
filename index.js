@@ -450,8 +450,7 @@ var puzzle = {
 
 
 		//если уже выделена одная ячейка
-		if (this.ec1!==null) {
-			
+		if (this.ec1!==null) {			
 			
 			//начинаем процесс перемещения клеток
 			this.ec2=objects.puzzle_cells[ind];
@@ -1405,12 +1404,7 @@ var game = {
 	
 	finish_game : function () {		
 		
-		//показыаем рекламу
-		show_ad();
-		
-		puzzle.hide();
-		this.close();
-		menu2.activate(1);	
+
 		
 	},
 	
@@ -1494,6 +1488,13 @@ var game = {
 			
 			//делаем звук
 			game_res.resources.win.sound.play();
+		
+			//убираем паззл
+			puzzle.hide();
+			
+			//убираем игру
+			game.close();
+		
 		
 			activity_on=0;		
 		}		
@@ -1610,8 +1611,9 @@ var game = {
 		
 		//убираем кнопки
 		anim.add_pos({obj: objects.game_buttons_cont,param: 		'x',vis_on_end: false,func: 'linear',val: ['sx',-450],	speed: 0.03	});
-
-		anim.add_pos({obj: objects.progress_cont,param: 		'x',vis_on_end: false,func: 'linear',val: ['x',-450],	speed: 0.03	});
+		
+		if (objects.progress_cont.visible === true)
+			anim.add_pos({obj: objects.progress_cont,param: 		'x',vis_on_end: false,func: 'linear',val: ['x',-450],	speed: 0.03	});
 
 	}
 	
@@ -1621,9 +1623,6 @@ var puzzle_complete_message= {
 	
 	show : function() {
 				
-		
-
-		
 		if (puzzle.size === 5) {
 			
 			for (let i=0;i<25;i++) {			
@@ -1649,7 +1648,6 @@ var puzzle_complete_message= {
 		anim.add_pos({obj: objects.game_complete_cont,param: 'x',		vis_on_end: true,func: 'easeOutBack',val: [-500,'sx'],	speed: 0.03	});
 		anim.add_pos({obj: objects.rainbow,param: 'alpha',		vis_on_end: true,func: 'linear',val: [0,1],	speed: 0.03	});
 		
-
 		any_dialog_active=1;
 	},
 	
@@ -1659,10 +1657,13 @@ var puzzle_complete_message= {
 		anim.add_pos({obj: objects.game_complete_cont,param: 'x',		vis_on_end: false,func: 'easeInBack',val: ['sx',500],	speed: 0.03	});
 		game.finish_game();
 		anim.add_pos({obj: objects.rainbow,param: 'alpha',		vis_on_end: false,func: 'linear',val: ['alpha',0],	speed: 0.03	});
+				
+		//активируем меню
+		menu2.activate(1);	
 		
 		//показыаем рекламу
 		show_ad();
-		
+				
 		game_res.resources.close.sound.play();
 	},
 	
@@ -2073,7 +2074,7 @@ function init_game_env() {
 	//короткое обращение к ресурсам
 	gres=game_res.resources;
 
-    app = new PIXI.Application({width: M_WIDTH, height: M_HEIGHT, antialias: false, forceCanvas: false});
+    app = new PIXI.Application({width: M_WIDTH, height: M_HEIGHT, antialias: false, forceCanvas: false, backgroundAlpha:0});
     document.body.appendChild(app.view);
 
     var resize = function () {
@@ -2212,8 +2213,8 @@ function load_resources() {
     game_res = new PIXI.Loader();
 	
 	
-	let git_src="https://akukamil.github.io/puzzle/"
-	//let git_src=""
+	//let git_src="https://akukamil.github.io/puzzle/"
+	let git_src=""
 	
 
 	game_res.add("m2_font", git_src+"m_font.fnt");
