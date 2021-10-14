@@ -1,3 +1,4 @@
+
 /*!
  * pixi-sound - v3.0.5
  * https://github.com/pixijs/pixi-sound
