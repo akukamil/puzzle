@@ -2064,9 +2064,7 @@ var lb={
 
 function init_game_env() {
 			
-			
-	return;
-	
+		
 	//инициируем файербейс
 	if (firebase.apps.length===0) {
 		firebase.initializeApp({
