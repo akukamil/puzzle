@@ -72,7 +72,7 @@ class puzzle_cell_class extends PIXI.Container {
 		this.hint.visible=false;
 		
 		
-		this.addChild(this.cell, this.cell_ok, this.cell_selected, this.hint);
+		this.addChild(this.cell, this.cell_ok, this.hint, this.cell_selected);
 	}
 	
 	pointer_down() {
@@ -172,8 +172,8 @@ class lb_player_card_class extends PIXI.Container{
 		
 	
 		this.record=new PIXI.BitmapText(' ', {fontName: 'Century Gothic', fontSize: 35});
-		this.record.x=300;
-		this.record.tint=0x007755;
+		this.record.x=350;
+		this.record.tint=0x002222;
 		this.record.y=20;		
 		
 		this.addChild(this.bcg,this.place, this.avatar, this.name, this.record);		
@@ -865,6 +865,10 @@ var anim2= {
 		return this.c3 * x * x * x - this.c1 * x * x;
 	},
 	
+	easeInQuad: function(x) {
+		return x * x;
+	},
+	
 	add : function(obj, params, vis_on_end, speed, func) {
 		
 		//ищем свободный слот для анимации
@@ -992,7 +996,7 @@ var main_menu = {
 		
 	},
 	
-	rules_ok_down: function() {
+	close_rules_dialog: function() {
 		
 		if (objects.rules_cont.ready===false)
 			return;
@@ -1001,7 +1005,7 @@ var main_menu = {
 		
 		any_dialog_active=0;
 		
-		anim.add_pos({obj: objects.rules_cont,param: 'y',vis_on_end: false,func: 'easeInBack',val: ['sy',450],speed: 0.04});
+		anim.add_pos({obj: objects.rules_cont,param: 'x',vis_on_end: false,func: 'easeInBack',val: ['sx',-450],speed: 0.04});
 		
 	},
 	
@@ -1019,7 +1023,7 @@ var main_menu = {
 		
 		gres.click.sound.play();
 		
-		anim.add_pos({obj: objects.rules_cont,param: 'y',vis_on_end: true,func: 'easeOutBack',val: [450,'sy'],speed: 0.02});
+		anim.add_pos({obj: objects.rules_cont,param: 'x',vis_on_end: true,func: 'easeOutBack',val: [450,'sx'],speed: 0.02});
 		
 	},
 	
@@ -1402,12 +1406,6 @@ var game = {
 		menu2.activate(0);
 	},
 	
-	finish_game : function () {		
-		
-
-		
-	},
-	
 	hint_button_down: function () {		
 	
 		if (any_dialog_active===1 || activity_on==1)
@@ -1469,9 +1467,10 @@ var game = {
 				//обновляем размер и положение картинки		
 				anim2.add(objects.puzzle_cells[p],{
 					rotation:[objects.puzzle_cells[p].rotation,0.8],
+					x:[objects.puzzle_cells[p].x,-20],
 					width:[objects.puzzle_cells[p].width,0],
 					height:[objects.puzzle_cells[p].height,0],					
-				}, false, this.finish_params[puzzle.size][1], 'easeInBack');		
+				}, false, this.finish_params[puzzle.size][1], 'easeInQuad');		
 				
 				game_res.resources.fin.sound.play();
 			}				
@@ -1666,7 +1665,6 @@ var puzzle_complete_message= {
 		
 		any_dialog_active=0;		
 		anim.add_pos({obj: objects.game_complete_cont,param: 'x',		vis_on_end: false,func: 'easeInBack',val: ['sx',500],	speed: 0.03	});
-		game.finish_game();
 		anim.add_pos({obj: objects.rainbow,param: 'alpha',		vis_on_end: false,func: 'linear',val: ['alpha',0],	speed: 0.03	});
 				
 		//активируем меню
@@ -2067,6 +2065,8 @@ var lb={
 function init_game_env() {
 			
 			
+	return;
+	
 	//инициируем файербейс
 	if (firebase.apps.length===0) {
 		firebase.initializeApp({
@@ -2169,7 +2169,7 @@ function init_game_env() {
 		return new Promise(function(resolve, reject) {
 			let loader=new PIXI.Loader();
 			loader.add("my_avatar", my_data.pic_url,{loadType: PIXI.LoaderResource.LOAD_TYPE.IMAGE, timeout: 5000});						
-			loader.load(function(l,r) {	resolve(l)});
+			loader.load(function(l,r) {	resolve(l) });
 		});
 		
 	}).then((loader)=> {		
@@ -2195,6 +2195,10 @@ function init_game_env() {
 		else
 			my_data.fpc = data.fpc;
 		
+		
+		
+		//обновляем данные в файербейс так как это мог быть новый игрок и у него должны быть занесены все данные
+		firebase.database().ref("players/"+my_data.uid+"/record").set(my_data.record);
 		
 		//устанавливаем баланс в попап
 		objects.id_record.text=my_data.record;	
@@ -2225,8 +2229,8 @@ function load_resources() {
     game_res = new PIXI.Loader();
 	
 	
-	//let git_src="https://akukamil.github.io/puzzle/"
-	let git_src=""
+	let git_src="https://akukamil.github.io/puzzle/"
+	//let git_src=""
 	
 
 	game_res.add("m2_font", git_src+"m_font.fnt");
