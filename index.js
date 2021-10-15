@@ -1474,9 +1474,7 @@ var game = {
 				//обновляем размер и положение картинки		
 				anim2.add(objects.puzzle_cells[p],{
 					rotation:[objects.puzzle_cells[p].rotation,0.8],
-					x:[objects.puzzle_cells[p].x,-20],
-					width:[objects.puzzle_cells[p].width,0],
-					height:[objects.puzzle_cells[p].height,0],					
+					x:[objects.puzzle_cells[p].x,-100]					
 				}, false, this.finish_params[puzzle.size][1], 'easeInQuad');		
 				
 				game_res.resources.fin.sound.play();
