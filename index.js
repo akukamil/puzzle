@@ -1528,8 +1528,8 @@ var game = {
 			
 			if (cur_progress === -1) {
 				
-				objects.game_complete_0.text="";					
-				objects.game_complete_1.text="Паззл собран!\nНо бонус и прогресс потеряны(((";	
+				objects.game_complete_0.text="Паззл собран!\nНо бонус и прогресс потеряны(((";	
+				objects.game_complete_1.text="";				
 				objects.rainbow.visible = false;
 			}
 			
@@ -1632,13 +1632,24 @@ var puzzle_complete_message= {
 					objects.fin_points[i].tint = 0x443311;	
 			}			
 						
-			objects.cur_progress_point.x=objects.fin_points[cur_progress].x;
-			objects.cur_progress_point.y=objects.fin_points[cur_progress].y+10;	
-		
 			
-			objects.my_record_point.x=objects.fin_points[my_data.record].x;
-			objects.my_record_point.y=objects.fin_points[my_data.record].y;
-			objects.fin_points[my_data.record].tint = 0xFF00FF;
+			if (cur_progress >= 0) {
+				objects.cur_progress_point.x=objects.fin_points[cur_progress].x;
+				objects.cur_progress_point.y=objects.fin_points[cur_progress].y+10;		
+				objects.cur_progress_point.visible = true;
+			} else {
+				objects.cur_progress_point.visible = false;				
+			}
+
+					
+			if (my_data.record >= 0) {	
+				objects.my_record_point.visible = true;
+				objects.my_record_point.x=objects.fin_points[my_data.record].x;
+				objects.my_record_point.y=objects.fin_points[my_data.record].y;
+				objects.fin_points[my_data.record].tint = 0xFF00FF;
+			} else {
+				objects.my_record_point.visible = false;				
+			}
 			
 			objects.top_record_point.x=objects.fin_points[global_record].x;
 			objects.top_record_point.y=objects.fin_points[global_record].y;
@@ -1664,6 +1675,7 @@ var puzzle_complete_message= {
 		//показыаем рекламу
 		show_ad();
 				
+		
 		game_res.resources.close.sound.play();
 	},
 	
@@ -1823,7 +1835,7 @@ var auth = function() {
 
 			local: function(repeat = 0) {
 
-				game_platform="LOCAL";
+				game_platform="YANDEX";
 
 				//ищем в локальном хранилище
 				let local_uid = localStorage.getItem('uid');
