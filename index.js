@@ -402,9 +402,13 @@ var puzzle = {
 					game_res.resources.open.sound.play();		
 					this.completed++;
 				}
+				
+				//указываем сколько процентов завершено
+				let perc_complete = Math.round(100 * this.completed / (this.size * this.size));
+				objects.complete_counter.text = `Завершено: ${perc_complete}%`;
 
 				//проверяем что паззл собран
-				if (this.completed===(this.size*this.size))		
+				if (perc_complete === 100)		
 					game.process_finish(1)
 					
 
@@ -1357,8 +1361,11 @@ var game = {
 		//добавляем сетку картинки
 		anim.add_pos({obj: objects['net_'+puzzle.size],param: 'alpha',		vis_on_end: true,func: 'linear',val: [0,1],	speed: 0.03	});
 			
+			
 		//добавляем кнопки
 		anim.add_pos({obj: objects.game_buttons_cont,param: 		'x',vis_on_end: true,func: 'linear',val: [450,'sx'],	speed: 0.03});
+		
+		
 		
 		//добавляем прогресс 
 		if (puzzle.size === 5)
@@ -1379,8 +1386,8 @@ var game = {
 		objects.hint_button_text.text=puzzle.hints_amount;
 
 	
-		//устанавливаем начальные значения ревордов
-		//objects.reward_time_text.text = p_data_x[puzzle.size - 3].sec_reward;
+		//устанавливаем начальные значения завершенных паззлов
+		objects.complete_counter.text = "Завершено: 0%";
 
 		//бонус акивирован но он может быть отменен по ходу игры
 		this.bonus = 1;
@@ -2065,6 +2072,8 @@ var lb={
 function init_game_env() {
 			
 		
+	return;
+		
 	//инициируем файербейс
 	if (firebase.apps.length===0) {
 		firebase.initializeApp({
@@ -2223,8 +2232,8 @@ function load_resources() {
     game_res = new PIXI.Loader();
 	
 	
-	let git_src="https://akukamil.github.io/puzzle/"
-	//let git_src=""
+	//let git_src="https://akukamil.github.io/puzzle/"
+	let git_src=""
 	
 
 	game_res.add("m2_font", git_src+"m_font.fnt");
