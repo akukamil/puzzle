@@ -2092,16 +2092,12 @@ function init_game_env() {
         const vph = window.innerHeight; // Height of the viewport
         let nvw; // New game width
         let nvh; // New game height
-
-        if (vph / vpw < M_HEIGHT / M_WIDTH) {
-            nvh = vph;
-            nvw = (nvh * M_WIDTH) / M_HEIGHT;
-        } else {
-            nvw = vpw;
-            nvh = (nvw * M_HEIGHT) / M_WIDTH;
-        }
-        app.renderer.resize(nvw, nvh);
-        app.stage.scale.set(nvw / M_WIDTH, nvh / M_HEIGHT);
+		
+		let sx= vpw / M_WIDTH;
+		let sy= vph /  M_HEIGHT;
+		
+        app.renderer.resize(vpw, vph);
+        app.stage.scale.set(sx, sy);
     }
 
     resize();
