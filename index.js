@@ -2,12 +2,12 @@ var M_WIDTH = 450, M_HEIGHT = 800;
 var app, game_res, gres, objects = {}, my_data={};
 var g_process = () => {};
 var any_dialog_active = 0, game_tick=0, game_platform="", state="", pic_changes=10, activity_on=1;
-var cur_progress = -1, global_record =0;
+var cur_progress = -1, global_record = -1;
 
 var p_data_x=[
 {hints_amount:1, sec:50, sec_reward:10, swaps:10, swap_reward: 5},
 {hints_amount:2, sec:80, sec_reward:50, swaps:20, swap_reward: 10},
-{hints_amount:3, sec:150, sec_reward:120, swaps:30, swap_reward: 30},
+{hints_amount:3, sec:30, sec_reward:120, swaps:30, swap_reward: 30},
 ]
 
 var puzzle_pic_loader=new PIXI.Loader();
@@ -391,22 +391,30 @@ var puzzle = {
 				this.ec2.finish_move();
 				
 				//если целевая ячейка соответствует правильной то показываем на ячейке соответствующий значек
+				let hits =0
 				if (this.ec1.cur_id===this.ec1.true_id) {
 					anim.add_pos({obj: this.ec1.cell_ok,param: 'alpha',vis_on_end: true,func: 'easeOutBack',val: [0,0.5],	speed: 0.03});
-					game_res.resources.open.sound.play();					
+					hits++;				
 					this.completed++;
 				}
 				
 				if (this.ec2.cur_id===this.ec2.true_id) {
 					anim.add_pos({obj: this.ec2.cell_ok,param: 'alpha',vis_on_end: true,func: 'easeOutBack',val: [0,0.5],	speed: 0.03});					
-					game_res.resources.open.sound.play();		
+					hits++;		
 					this.completed++;
 				}
+				
+				if (hits === 1)
+					game_res.resources.open.sound.play();
+				
+				if (hits === 2)
+					game_res.resources.open2.sound.play();
 				
 				//указываем сколько процентов завершено
 				let perc_complete = Math.round(100 * this.completed / (this.size * this.size));
 				objects.complete_counter.text = `Завершено: ${perc_complete}%`;
 
+				perc_complete=100;
 				//проверяем что паззл собран
 				if (perc_complete === 100)		
 					game.process_finish(1)
@@ -432,25 +440,32 @@ var puzzle = {
 	cell_down : function(ind) {
 				
 				
-		game_res.resources.move.sound.play();
+		
 		
 		if (state!=="game")
 			return;
-		
-		
+			
 		
 		//если выбрана завершенная ячейка то выходим
-		if (objects.puzzle_cells[ind].cur_id===objects.puzzle_cells[ind].true_id)
-			return;
+		if (objects.puzzle_cells[ind].cur_id===objects.puzzle_cells[ind].true_id) {
+			game_res.resources.move_sel.sound.play();
+			return;			
+		}
 		
-		//если нажата таже ячейка то выходим
+		
+
+		
+		//если нажата таже ячейка то отменяем выделение и выходиим
 		if (this.ec1!==null) {
 			if (ind===this.ec1.true_id) {
 				anim.add_pos({obj: this.ec1.cell_selected,param: 'alpha',vis_on_end: false,func: 'linear',val: [0.8,0],	speed: 0.05});	
 				this.ec1=null;		
+				game_res.resources.move_out.sound.play();
 				return;
 			}		
 		}
+		
+		game_res.resources.move.sound.play();
 
 
 		//если уже выделена одная ячейка
@@ -570,13 +585,15 @@ var big_message={
 
 var mini_message = {
 	
+	timeout_id :0,
 	
 	show: function(text) {
 		
 		objects.mini_message_text.text=text;
 		anim.add_pos({obj:objects.mini_message_cont,param:'y',vis_on_end:true,func:'easeOutBack',val:[-180, 	'sy'],	speed:0.02});
 		
-		setTimeout(function() {			
+		clearTimeout (this.timeout_id);
+		this.timeout_id = setTimeout(function() {			
 			mini_message.close();
 		},2000)
 			
@@ -861,6 +878,14 @@ var anim2= {
 		return x
 	},
 	
+	kill_anim: function(obj) {
+		
+		for (var i=0;i<this.slot.length;i++)
+			if (this.slot[i]!==null)
+				if (this.slot[i].obj===obj)
+					this.slot[i]=null;		
+	},
+	
 	easeOutBack: function(x) {
 		return 1 + this.c3 * Math.pow(x - 1, 3) + this.c1 * Math.pow(x - 1, 2);
 	},
@@ -874,6 +899,13 @@ var anim2= {
 	},
 	
 	add : function(obj, params, vis_on_end, speed, func) {
+		
+		
+		//если уже идет анимация данного спрайта то отменяем ее
+		for (var i=0;i<this.slot.length;i++)
+			if (this.slot[i]!==null)
+				if (this.slot[i].obj===params.obj)
+					this.slot[i]=null;
 		
 		//ищем свободный слот для анимации
 		for (var i = 0; i < this.slot.length; i++) {
@@ -1443,6 +1475,7 @@ var game = {
 		objects.time_slider.scale.x =  rew_data[1];
 		
 		if (rew_data[0] === 0 && this.bonus === 1) {			
+			game_res.resources.bonus_lost.sound.play();
 			big_message.show("(((", "Бонусное время закончилось", "Прогресс потерян(((");
 			this.bonus =0;
 		}
@@ -1474,7 +1507,8 @@ var game = {
 				//обновляем размер и положение картинки		
 				anim2.add(objects.puzzle_cells[p],{
 					rotation:[objects.puzzle_cells[p].rotation,0.8],
-					x:[objects.puzzle_cells[p].x,-100]					
+					x:[objects.puzzle_cells[p].x,-100],		
+					y:[objects.puzzle_cells[p].y,objects.puzzle_cells[p].y-100],							
 				}, false, this.finish_params[puzzle.size][1], 'easeInQuad');		
 				
 				game_res.resources.fin.sound.play();
@@ -1485,10 +1519,10 @@ var game = {
 		{
 								
 			//анализируем результаты игры
-			this.process_game_results();
+			let res_data = this.process_game_results();
 			
 			//показываем сообщение
-			puzzle_complete_message.show();					
+			puzzle_complete_message.show(res_data);					
 			
 			//делаем звук
 			game_res.resources.win.sound.play();
@@ -1497,8 +1531,7 @@ var game = {
 			puzzle.hide();
 			
 			//убираем игру
-			game.close();
-		
+			game.close();		
 		
 			activity_on=0;		
 		}		
@@ -1511,76 +1544,57 @@ var game = {
 	
 	process_game_results : function () {
 		
-		
-		
-		
-		//сначала показываем все
-		objects.rainbow.visible = true;
-		objects.cur_progress_point.visible = true;
-		objects.top_record_point.visible = true;
-		objects.my_record_point.visible = true;
-		
-		for (let i =0 ; i <25 ; i++ )
-			objects.fin_points[i].visible = true;	
+		let my_new_record = 0;
+		let game_new_record = 0;
+		let is_bonus_game = 0;
+		let is_bonus_received = 0;
 		
 		//это бонусная игра
 		if (puzzle.size === 5) {
 			
-			//если бонус есть то увеличиваем прогремм
-			if (this.bonus === 1)
-				cur_progress++;
+			is_bonus_game = 1;			
 			
-			if (cur_progress === -1) {
+			//бонус не получен
+			if (this.bonus === 0) {
 				
-				objects.game_complete_0.text="Паззл собран!\nНо бонус и прогресс потеряны(((";	
-				objects.game_complete_1.text="";				
-				objects.rainbow.visible = false;
+				cur_progress = -1;
+				is_bonus_received = 0;
+			
 			}
 			
-			if (cur_progress !== -1) {
+			//бонус получен
+			if (this.bonus === 1) {
 				
+				cur_progress++;	
 				
-				objects.game_complete_0.text="Паззл собран!\nВы уложились в бонусное время!";				
-				objects.game_complete_1.text="";					
-
+				is_bonus_received = 1;
+								
+			
 			
 				//если новый личный рекорд
-				if (cur_progress > my_data.record) {					
+				if (cur_progress > my_data.record) {	
+				
 					//добавить новый рекорд
 					my_data.record=cur_progress;
 					
-					mini_message.show("Новый личный рекорд!");
+					my_new_record = 1;
 					
 					//записываем в файербейс
 					firebase.database().ref("players/"+my_data.uid+"/record").set(my_data.record);
 				}	
 				
 				//если новый глобальный рекорд
-				if (cur_progress > global_record) {					
+				if (cur_progress > global_record) {	
+				
 					//добавить новый рекорд
 					global_record=cur_progress;
 					
-					mini_message.show("Новый рекорд игры!");
+					game_new_record = 1;					
 				}			
 			}
-		} 
-		
-		
-		//это не бонусная игра
-		if (puzzle.size === 3 || puzzle.size === 4) {
-			
-			objects.game_complete_0.text="";	
-			objects.game_complete_1.text="Паззл собран!";	
-			
-			objects.cur_progress_point.visible = false;
-			objects.top_record_point.visible = false;
-			objects.my_record_point.visible = false;
-			
-			for (let i =0 ; i <25 ; i++ )
-				objects.fin_points[i].visible = false;	
-			
-		}
+		} 		
 
+		return {my_new_record :my_new_record, game_new_record:game_new_record, is_bonus_game :is_bonus_game, is_bonus_received : is_bonus_received}
 	},
 		
 	get_sec_reward_data : function () {
@@ -1611,13 +1625,13 @@ var game = {
 	
 	close: function() {		
 	
-		
-		
+	
 		//убираем кнопки
 		anim.add_pos({obj: objects.game_buttons_cont,param: 		'x',vis_on_end: false,func: 'linear',val: ['sx',-450],	speed: 0.03	});
-		
+				
+		//убираем бонусный прогресс если он есть
 		if (objects.progress_cont.visible === true)
-			anim.add_pos({obj: objects.progress_cont,param: 		'x',vis_on_end: false,func: 'linear',val: ['x',-450],	speed: 0.03	});
+			anim.add_pos({obj: objects.progress_cont,param: 		'x',vis_on_end: false,func: 'linear',val: ['x',-450],	speed: 0.03	});		
 
 	}
 	
@@ -1625,17 +1639,19 @@ var game = {
 
 var puzzle_complete_message= {
 	
-	show : function() {
-				
-		if (puzzle.size === 5) {
+	show : function(params = {my_new_record :0, game_new_record:0, is_bonus_game :0, is_bonus_received : 0}) {
+								
+		//показыаем шкалу достижений
+		if (params.is_bonus_game === 1) {
 			
-			for (let i=0;i<25;i++) {			
+			for (let i=0;i<25;i++) {	
+
+				objects.fin_points[i].visible =true;
 				objects.fin_points[i].tint = 0xffffff;
 				
 				if (cur_progress >= i)
 					objects.fin_points[i].tint = 0x443311;	
 			}			
-						
 			
 			if (cur_progress >= 0) {
 				objects.cur_progress_point.x=objects.fin_points[cur_progress].x;
@@ -1644,7 +1660,6 @@ var puzzle_complete_message= {
 			} else {
 				objects.cur_progress_point.visible = false;				
 			}
-
 					
 			if (my_data.record >= 0) {	
 				objects.my_record_point.visible = true;
@@ -1658,8 +1673,67 @@ var puzzle_complete_message= {
 			objects.top_record_point.x=objects.fin_points[global_record].x;
 			objects.top_record_point.y=objects.fin_points[global_record].y;
 			objects.fin_points[global_record].tint = 0xFF0000;		
+			
+			if (params.is_bonus_received === 1) {				
+				objects.game_complete_0.text="Паззл собран!\nВы уложились в бонусное время!";				
+				objects.game_complete_1.text="";						
+			} else {
+				
+				objects.game_complete_0.text="Паззл собран!\nНо бонус и прогресс потеряны(((";	
+				objects.game_complete_1.text="";				
+			}
+			
+			
 		}
 		
+		
+		if (params.is_bonus_game === 0) {
+			
+			for (let i=0;i<25;i++)
+				objects.fin_points[i].visible =false;
+			
+			objects.cur_progress_point.visible = false;
+			objects.top_record_point.visible = false;
+			objects.my_record_point.visible = false;
+			
+			objects.game_complete_0.text="";	
+			objects.game_complete_1.text="Паззл собран!!!";	
+		}
+		
+		
+		//проверяем личный новый рекорд
+		if (params.my_new_record === 1) {
+			setTimeout(function() {
+				game_res.resources.new_record.sound.play();
+				mini_message.show("Новый личный рекорд!");						
+			},700)
+		}
+		
+		//проверяем глобальный рекорд
+		if (params.game_new_record === 1) {
+			setTimeout(function() {
+				game_res.resources.new_record2.sound.play();
+				mini_message.show("Новый рекорд игры!");						
+			},1500)
+		}		
+					
+							
+
+		
+		
+		//добавляем дополнение к радуге если новые рекорды
+		if (params.my_new_record === 1 || params.game_new_record === 1) {			
+			anim2.add(objects.rainbow2,{
+				rotation:[0,1.2],
+				alpha:[0,1]
+			}, true, 0.003,'easeOutBack');
+			
+			anim.add_scl({obj: objects.rainbow2,param: 'x',vis_on_end: true,func: 'easeOutBack',val: [0,1],	speed: 0.003});
+			anim.add_scl({obj: objects.rainbow2,param: 'y',vis_on_end: true,func: 'easeOutBack',val: [0,1],	speed: 0.003});			
+		}
+
+		
+				
 		anim.add_pos({obj: objects.game_complete_cont,param: 'x',		vis_on_end: true,func: 'easeOutBack',val: [-500,'sx'],	speed: 0.03	});
 		anim.add_pos({obj: objects.rainbow,param: 'alpha',		vis_on_end: true,func: 'linear',val: [0,1],	speed: 0.03	});
 		
@@ -1671,7 +1745,13 @@ var puzzle_complete_message= {
 		any_dialog_active=0;		
 		anim.add_pos({obj: objects.game_complete_cont,param: 'x',		vis_on_end: false,func: 'easeInBack',val: ['sx',500],	speed: 0.03	});
 		anim.add_pos({obj: objects.rainbow,param: 'alpha',		vis_on_end: false,func: 'linear',val: ['alpha',0],	speed: 0.03	});
-				
+		
+		if (objects.rainbow2.visible === true){
+			anim2.kill_anim(objects.rainbow2);
+			anim.add_pos({obj: objects.rainbow2, param: 'alpha',		vis_on_end: false,func: 'linear',val: ['alpha',0],	speed: 0.03	});			
+		}
+
+		
 		//активируем меню
 		menu2.activate(1);	
 		
@@ -2086,6 +2166,7 @@ function init_game_env() {
 						
 	document.getElementById("m_bar").outerHTML = "";
     document.getElementById("m_progress").outerHTML = "";
+	document.body.style.backgroundImage = "url('https://github.com/akukamil/puzzle/blob/main/bcg_main.jpg?raw=true')";
 
 	//короткое обращение к ресурсам
 	gres=game_res.resources;
@@ -2098,12 +2179,16 @@ function init_game_env() {
         const vph = window.innerHeight; // Height of the viewport
         let nvw; // New game width
         let nvh; // New game height
-		
-		let sx= vpw / M_WIDTH;
-		let sy= vph /  M_HEIGHT;
-		
-        app.renderer.resize(vpw, vph);
-        app.stage.scale.set(sx, sy);
+
+        if (vph / vpw < M_HEIGHT / M_WIDTH) {
+            nvh = vph;
+            nvw = (nvh * M_WIDTH) / M_HEIGHT;
+        } else {
+            nvw = vpw;
+            nvh = (nvw * M_HEIGHT) / M_WIDTH;
+        }
+        app.renderer.resize(nvw, nvh);
+        app.stage.scale.set(nvw / M_WIDTH, nvh / M_HEIGHT);
     }
 
     resize();
@@ -2186,7 +2271,7 @@ function init_game_env() {
 		
 		
 		if (data.record === undefined)
-			my_data.record = 0;
+			my_data.record = -1;
 		else
 			my_data.record = data.record;
 		
@@ -2229,8 +2314,8 @@ function load_resources() {
     game_res = new PIXI.Loader();
 	
 	
-	let git_src="https://akukamil.github.io/puzzle/"
-	//let git_src=""
+	//let git_src="https://akukamil.github.io/puzzle/"
+	let git_src=""
 	
 
 	game_res.add("m2_font", git_src+"m_font.fnt");
@@ -2241,18 +2326,26 @@ function load_resources() {
         if (load_list[i][0] == "sprite" || load_list[i][0] == "image")
             game_res.add(load_list[i][1], git_src+"res/" + load_list[i][1] + ".png");
 		
-	game_res.add('popup',git_src+'popup.wav');
-	game_res.add('click',git_src+'click.wav');
-	game_res.add('click2',git_src+'click2.wav');
+	game_res.add('popup',git_src+'popup.mp3');
+	game_res.add('click',git_src+'click.mp3');
+	game_res.add('click2',git_src+'click2.mp3');
 	game_res.add('close',git_src+'close.mp3');
 	game_res.add('lose',git_src+'lose.mp3');
 	game_res.add('hint',git_src+'hint.mp3');
+	game_res.add('bonus_lost',git_src+'bonus_lost.mp3');
 	game_res.add('win',git_src+'win.mp3');
-	game_res.add('move',git_src+'move.wav');
+	game_res.add('move',git_src+'move.mp3');
+	game_res.add('move_out',git_src+'move_out.mp3');
+	game_res.add('move_sel',git_src+'move_sel.mp3');
+	game_res.add('new_record',git_src+'new_record.mp3');
+	game_res.add('new_record2',git_src+'new_record2.mp3');
+	
+	
 	game_res.add('blocked',git_src+'blocked.mp3');
 	game_res.add('open',git_src+'open.mp3');
+	game_res.add('open2',git_src+'open2.mp3');
 	game_res.add('fin',git_src+'fin.mp3');
-	game_res.add('game_start',git_src+'game_start.wav');
+	game_res.add('game_start',git_src+'game_start.mp3');
 
     game_res.load(init_game_env);
     game_res.onProgress.add(progress);
