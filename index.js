@@ -1670,9 +1670,16 @@ var puzzle_complete_message= {
 				objects.my_record_point.visible = false;				
 			}
 			
-			objects.top_record_point.x=objects.fin_points[global_record].x;
-			objects.top_record_point.y=objects.fin_points[global_record].y;
-			objects.fin_points[global_record].tint = 0xFF0000;		
+			if (global_record >= 0) {
+				objects.top_record_point.visible = true;		
+				objects.top_record_point.x=objects.fin_points[global_record].x;
+				objects.top_record_point.y=objects.fin_points[global_record].y;
+				objects.fin_points[global_record].tint = 0xFF0000;		 				
+			} else {
+				objects.top_record_point.visible = false;		
+			}
+			
+
 			
 			if (params.is_bonus_received === 1) {				
 				objects.game_complete_0.text="Паззл собран!\nВы уложились в бонусное время!";				
