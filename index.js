@@ -4,12 +4,6 @@ var g_process = () => {};
 var any_dialog_active = 0, game_tick=0, game_platform="", state="", pic_changes=10, activity_on=1;
 var cur_progress = -1, global_record = -1;
 
-var p_data_x=[
-{hints_amount:1, sec:50, sec_reward:10, swaps:10, swap_reward: 5},
-{hints_amount:2, sec:80, sec_reward:50, swaps:20, swap_reward: 10},
-{hints_amount:3, sec:30, sec_reward:120, swaps:30, swap_reward: 30},
-]
-
 var puzzle_pic_loader=new PIXI.Loader();
 
 rnd= Math.random;
@@ -235,7 +229,7 @@ var puzzle = {
 		if (this.size === 4)	{this.cell_size = 102.5}
 		if (this.size === 5)	{this.cell_size = 86}
 		
-		this.hints_amount =	p_data_x[this.size-3].hints_amount;
+		this.hints_amount =	this.size-2;
 		
 		this.width = this.cell_size *	this.size;	
 		this.x = (450 - this.width) / 2;
@@ -1376,6 +1370,7 @@ var game = {
 	start_time: 0,
 	timer : 0,
 	bonus : 1,
+	bonus_time : 200,
 	last_time_reward : 0,
 	finish_params : {3 :[30,0.025], 4:[25,0.03], 5:[20,0.035]},
     process: function () {},
@@ -1470,14 +1465,20 @@ var game = {
 			return;
 		
 		
-		//вычисляем бонусное время
-		let rew_data = this.get_sec_reward_data();		
-		objects.time_slider.scale.x =  rew_data[1];
+		if (this.bonus === 1) {	
 		
-		if (rew_data[0] === 0 && this.bonus === 1) {			
-			game_res.resources.bonus_lost.sound.play();
-			big_message.show("(((", "Бонусное время закончилось", "Прогресс потерян(((");
-			this.bonus =0;
+			//вычисляем бонусное время
+			let sec_passes = game_tick - this.start_time;
+			let perc = 1 - sec_passes / this.bonus_time;
+			if (perc < 0)	perc = 0;
+
+			objects.time_slider.scale.x =  perc;		
+				
+			if (perc === 0) {
+				game_res.resources.bonus_lost.sound.play();
+				big_message.show("(((", "Бонусное время закончилось", "Прогресс потерян(((");
+				this.bonus =0;				
+			}
 		}
 
 	},
@@ -1554,11 +1555,12 @@ var game = {
 			
 			is_bonus_game = 1;			
 			
-			//бонус не получен
+			//бонус потреян
 			if (this.bonus === 0) {
 				
 				cur_progress = -1;
 				is_bonus_received = 0;
+				this.bonus_time = 200;
 			
 			}
 			
@@ -1566,6 +1568,7 @@ var game = {
 			if (this.bonus === 1) {
 				
 				cur_progress++;	
+				this.bonus_time -= 6;
 				
 				is_bonus_received = 1;
 								
@@ -1597,24 +1600,7 @@ var game = {
 		return {my_new_record :my_new_record, game_new_record:game_new_record, is_bonus_game :is_bonus_game, is_bonus_received : is_bonus_received}
 	},
 		
-	get_sec_reward_data : function () {
-		
-		//контролируем уменишение времени и соотетственно возможной награды
-		let sec_left = game_tick - this.start_time;
-		let max_sec = p_data_x[puzzle.size - 3].sec;
-	
-		let perc = 1 - sec_left / max_sec;
-		let cur_reward = Math.round(p_data_x[puzzle.size - 3].sec_reward * perc);	
-		
-		if (perc<0) {
-			perc = 0;
-			cur_reward = 0;			
-		} 
-					
-		return [cur_reward, perc];		
-		
-	},	
-	
+
 	made_a_swap : function () {
 		
 		this.start_time -= 1; 
@@ -1655,7 +1641,7 @@ var puzzle_complete_message= {
 			
 			if (cur_progress >= 0) {
 				objects.cur_progress_point.x=objects.fin_points[cur_progress].x;
-				objects.cur_progress_point.y=objects.fin_points[cur_progress].y+10;		
+				objects.cur_progress_point.y=objects.fin_points[cur_progress].y-5;		
 				objects.cur_progress_point.visible = true;
 			} else {
 				objects.cur_progress_point.visible = false;				
@@ -1664,7 +1650,7 @@ var puzzle_complete_message= {
 			if (my_data.record >= 0) {	
 				objects.my_record_point.visible = true;
 				objects.my_record_point.x=objects.fin_points[my_data.record].x;
-				objects.my_record_point.y=objects.fin_points[my_data.record].y;
+				objects.my_record_point.y=objects.fin_points[my_data.record].y+2;
 				objects.fin_points[my_data.record].tint = 0xFF00FF;
 			} else {
 				objects.my_record_point.visible = false;				
@@ -1673,7 +1659,7 @@ var puzzle_complete_message= {
 			if (global_record >= 0) {
 				objects.top_record_point.visible = true;		
 				objects.top_record_point.x=objects.fin_points[global_record].x;
-				objects.top_record_point.y=objects.fin_points[global_record].y;
+				objects.top_record_point.y=objects.fin_points[global_record].y+2;
 				objects.fin_points[global_record].tint = 0xFF0000;		 				
 			} else {
 				objects.top_record_point.visible = false;		
@@ -1692,8 +1678,7 @@ var puzzle_complete_message= {
 			
 			
 		}
-		
-		
+				
 		if (params.is_bonus_game === 0) {
 			
 			for (let i=0;i<25;i++)
@@ -1706,8 +1691,7 @@ var puzzle_complete_message= {
 			objects.game_complete_0.text="";	
 			objects.game_complete_1.text="Паззл собран!!!";	
 		}
-		
-		
+				
 		//проверяем личный новый рекорд
 		if (params.my_new_record === 1) {
 			setTimeout(function() {
@@ -1724,7 +1708,7 @@ var puzzle_complete_message= {
 			},1500)
 		}		
 					
-							
+					
 
 		
 		
@@ -2329,9 +2313,16 @@ function load_resources() {
 
 
     //добавляем из листа загрузки
-    for (var i = 0; i < load_list.length; i++)
-        if (load_list[i][0] == "sprite" || load_list[i][0] == "image")
-            game_res.add(load_list[i][1], git_src+"res/" + load_list[i][1] + ".png");
+    for (var i = 0; i < load_list.length; i++) {
+		
+        if (load_list[i][0] == "sprite" )
+            game_res.add(load_list[i][1], git_src+"res/" + load_list[i][1] + "." +  load_list[i][4]);		
+		
+        if (load_list[i][0] == "image")
+            game_res.add(load_list[i][1], git_src+"res/" + load_list[i][1] + "." +  load_list[i][2]);
+		
+	}
+
 		
 	game_res.add('popup',git_src+'popup.mp3');
 	game_res.add('click',git_src+'click.mp3');
