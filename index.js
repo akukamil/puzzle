@@ -654,7 +654,7 @@ var pbd = {
 			.catch(function() { pbd.rewarded(0) });				
 		}
 		
-		if(game_platform === "debug")
+		if(game_platform === "debug" || game_platform === "unknown")
 			 pbd.rewarded(0);
 		
 	},
