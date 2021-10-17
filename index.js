@@ -315,9 +315,12 @@ var puzzle = {
 		if (state!=="game")
 			return;
 		
-		
-		//if (this.hints_amount===0)
-		//	return;
+		//это если нет подсказок
+		if (this.hints_amount===0) {
+			game_res.resources.blocked.sound.play();
+			return;			
+		}
+
 		this.hints_amount--;
 		
 		let rnd_cell=irnd(1,this.size*this.size)-1;	
@@ -408,7 +411,7 @@ var puzzle = {
 				let perc_complete = Math.round(100 * this.completed / (this.size * this.size));
 				objects.complete_counter.text = `Завершено: ${perc_complete}%`;
 
-				perc_complete=100;
+				//perc_complete=100;
 				//проверяем что паззл собран
 				if (perc_complete === 100)		
 					game.process_finish(1)
@@ -447,8 +450,6 @@ var puzzle = {
 		}
 		
 		
-
-		
 		//если нажата таже ячейка то отменяем выделение и выходиим
 		if (this.ec1!==null) {
 			if (ind===this.ec1.true_id) {
@@ -474,7 +475,7 @@ var puzzle = {
 			this.ec2.prepare_shuffle(this.ec1.cur_id,this.size, this.cell_size, this.image_size);
 			
 			//сообщаем в игру что сдела своп
-			game.made_a_swap();
+			//game.made_a_swap();
 			
 			state="shuffling";
 			this.tween_amount=0;
@@ -1600,12 +1601,9 @@ var game = {
 		return {my_new_record :my_new_record, game_new_record:game_new_record, is_bonus_game :is_bonus_game, is_bonus_received : is_bonus_received}
 	},
 		
-
 	made_a_swap : function () {
 		
 		this.start_time -= 1; 
-				
-
 		
 	},
 	
