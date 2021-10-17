@@ -627,47 +627,62 @@ var pbd = {
 	ok_down : function () {		
 		
 		
-		if (platform === "YANDEX") {
-			
+		if (game_platform === "YANDEX") {			
 			
 			ysdk.adv.showRewardedVideo({
 				callbacks: {
 					onOpen: () => {
 					},
 					onRewarded: () => {
-						this.rewarded(1);
+						pbd.rewarded(1);
 					},
 					onClose: () => {
-						this.rewarded(0);
+						pbd.rewarded(0);
 					}, 
 					onError: (e) => {
-						this.rewarded(0);
+						pbd.rewarded(0);
 					}
 				}
 			})		
 		}	
 		
 		
-		if (platform === "VK") {
+		if (game_platform === "VK") {
 			
 			vkBridge.send("VKWebAppShowNativeAds", {ad_format:"reward"})
-			.then(data => console.log(data.result))
-			.catch(error => console.log(error));	
-			
+			.then(function() { pbd.rewarded(1) })
+			.catch(function() { pbd.rewarded(0) });				
 		}
+		
+		if(game_platform === "debug")
+			 pbd.rewarded(0);
 		
 	},
 	
 	rewarded : function(is_ok) {
 		
-		if (is_ok === 1)
-			my_data.fpc+=5;
+		if (is_ok === 1) {
+			
+			game_res.resources.popup.sound.play();
+			
+			//увеличиваем количество смен картинок
+			my_data.fpc+=5;		
+
+			//обновляем на сервере
+			firebase.database().ref("players/"+my_data.uid+"/fpc").set(my_data.fpc);
+			
+			//показываем сколько осталось смен картинок
+			objects.pic_changes_text.text=my_data.fpc;				
+		} else {
+			
+			game_res.resources.move_sel.sound.play();
+			big_message.show('Ошибка','Не получилось загрузить рекламу','Побробуйте позже', function(){big_message.close()},null);
+		}
 		
-		//обновляем на сервере
-		firebase.database().ref("players/"+my_data.uid+"/fpc").set(my_data.fpc);
 		
-		//показываем сколько осталось смен картинок
-		objects.pic_changes_text.text=my_data.fpc;				
+
+		
+			
 		
 		any_dialog_active=0;
 		
@@ -2276,6 +2291,9 @@ function init_game_env() {
 		
 		//устанавливаем баланс в попап
 		objects.id_record.text=my_data.record;	
+		
+		//устанавливаем имя в верхнюю строчку
+		objects.my_name.text=my_data.name;	
 			
 			
 		activity_on=0;	
