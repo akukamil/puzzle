@@ -1755,7 +1755,7 @@ var puzzle_complete_message= {
 		objects.my_record_point.rotation=Math.sin(game_tick*6)*0.1;
 	},
 	
-	invite_friends_down: function() {
+	vk_invite_down: function() {
 		
         if (objects.main_buttons_cont.ready === false || any_dialog_active===1) {
 			gres.locked.sound.play();
