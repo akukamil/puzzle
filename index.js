@@ -2274,8 +2274,7 @@ function init_game_env() {
 		else
 			my_data.fpc = data.fpc;
 		
-		
-		
+				
 		//обновляем данные в файербейс так как это мог быть новый игрок и у него должны быть занесены все данные
 		firebase.database().ref("players/"+my_data.uid+"/record").set(my_data.record);
 		
@@ -2284,6 +2283,12 @@ function init_game_env() {
 		
 		//устанавливаем имя в верхнюю строчку
 		objects.my_name.text=my_data.name;	
+		
+		//убираем кнопки вконтакте если мы не вконтакте
+		if (game_platform!=="VK") {
+			objects.vk_invite_button.visible = false;
+			objects.vk_post_button.visible = false;			
+		}
 			
 			
 		activity_on=0;	
