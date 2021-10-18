@@ -1737,7 +1737,9 @@ var puzzle_complete_message= {
 			anim.add_scl({obj: objects.rainbow2,param: 'y',vis_on_end: true,func: 'easeOutBack',val: [0,1],	speed: 0.003});			
 		}
 
-		
+
+		//записываем событие
+		firebase.database().ref("players/"+my_data.uid+"/tm").set(firebase.database.ServerValue.TIMESTAMP);
 				
 		anim.add_pos({obj: objects.game_complete_cont,param: 'x',		vis_on_end: true,func: 'easeOutBack',val: [-500,'sx'],	speed: 0.03	});
 		anim.add_pos({obj: objects.rainbow,param: 'alpha',		vis_on_end: true,func: 'linear',val: [0,1],	speed: 0.03	});
