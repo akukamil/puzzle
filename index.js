@@ -1082,28 +1082,6 @@ var main_menu = {
 		if (game_tick>this.start_time+5) {
 			this.start_time=game_tick;
 		}
-	},
-	
-	invite_friends_down: function() {
-		
-        if (objects.main_buttons_cont.ready === false || any_dialog_active===1) {
-			gres.locked.sound.play();
-            return;
-		}
-		
-		if (game_platform==='VK_WEB' || game_platform==='VK_MINIAPP')
-			vkBridge.send('VKWebAppShowInviteBox');
-	},
-	
-	vk_post_down: function() {
-		
-        if (objects.main_buttons_cont.ready === false || any_dialog_active===1) {
-			gres.locked.sound.play();
-            return;
-		}
-		
-		if (game_platform==='VK_WEB' || game_platform==='VK_MINIAPP')
-			vkBridge.send('VKWebAppShowWallPostBox', {"message": `Мой рейтинг в игре Стикмэны-Дуэль ${my_data.balance}. А сколько наберешь ты?`});
 	}
 	
 }
@@ -1775,6 +1753,28 @@ var puzzle_complete_message= {
 		
 		objects.top_record_point.rotation=Math.sin(game_tick*4)*0.1;
 		objects.my_record_point.rotation=Math.sin(game_tick*6)*0.1;
+	},
+	
+	invite_friends_down: function() {
+		
+        if (objects.main_buttons_cont.ready === false || any_dialog_active===1) {
+			gres.locked.sound.play();
+            return;
+		}
+		
+		if (game_platform==='VK_WEB' || game_platform==='VK_MINIAPP')
+			vkBridge.send('VKWebAppShowInviteBox');
+	},
+	
+	vk_post_down: function() {
+		
+        if (objects.main_buttons_cont.ready === false || any_dialog_active===1) {
+			gres.locked.sound.play();
+            return;
+		}
+		
+		if (game_platform==='VK_WEB' || game_platform==='VK_MINIAPP')
+			vkBridge.send('VKWebAppShowWallPostBox', {"message": `Мой рейтинг в игре Стикмэны-Дуэль ${my_data.balance}. А сколько наберешь ты?`});
 	}
 	
 }
