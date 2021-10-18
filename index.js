@@ -1757,7 +1757,7 @@ var puzzle_complete_message= {
 	
 	vk_invite_down: function() {
 		
-        if (objects.main_buttons_cont.ready === false || any_dialog_active===1) {
+        if (objects.game_complete_cont.ready === false) {
 			gres.blocked.sound.play();
             return;
 		}
@@ -1768,7 +1768,7 @@ var puzzle_complete_message= {
 	
 	vk_post_down: function() {
 		
-        if (objects.main_buttons_cont.ready === false || any_dialog_active===1) {
+        if (objects.game_complete_cont.ready === false) {
 			gres.blocked.sound.play();
             return;
 		}
