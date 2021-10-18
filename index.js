@@ -608,6 +608,9 @@ var pbd = {
 	
 	close : function () {
 		
+		if (activity_on === 1)
+			return;
+		
 		
 		game_res.resources.close.sound.play();
 		
@@ -619,8 +622,12 @@ var pbd = {
 	
 	ok_down : function () {		
 		
+		if (activity_on === 1)
+			return;
 		
-		if (game_platform === "YANDEX") {			
+		if (game_platform === "YANDEX") {	
+			
+			activity_on = 1;
 			
 			ysdk.adv.showRewardedVideo({
 				callbacks: {
@@ -642,6 +649,8 @@ var pbd = {
 		
 		if (game_platform === "VK") {
 			
+			activity_on = 1;
+			
 			vkBridge.send("VKWebAppShowNativeAds", {ad_format:"reward"})
 			.then(function() { pbd.rewarded(1) })
 			.catch(function() { pbd.rewarded(0) });				
@@ -653,6 +662,8 @@ var pbd = {
 	},
 	
 	rewarded : function(is_ok) {
+		
+		activity_on = 0;
 		
 		if (is_ok === 1) {
 			
