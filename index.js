@@ -410,9 +410,9 @@ var puzzle = {
 				let perc_complete = Math.round(100 * this.completed / (this.size * this.size));
 				objects.complete_counter.text = `Завершено: ${perc_complete}%`;
 
-				//perc_complete=100;
+				//perc_complete=20;
 				//проверяем что паззл собран
-				if (perc_complete === 100)		
+				if (perc_complete > 20)		
 					game.process_finish(1)
 					
 
