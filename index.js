@@ -189,8 +189,7 @@ var puzzle = {
 	ec2:null,
 	completed: 0,
 	tween_amount:0,	
-	state:"",
-	
+	state:"",	
 	
 	get_random_array: function() {
 				
@@ -435,20 +434,15 @@ var puzzle = {
 	},
 	
 	cell_down : function(ind) {
-				
-				
-		
-		
+							
 		if (state!=="game")
 			return;
 			
-		
 		//если выбрана завершенная ячейка то выходим
 		if (objects.puzzle_cells[ind].cur_id===objects.puzzle_cells[ind].true_id) {
 			game_res.resources.move_sel.sound.play();
 			return;			
 		}
-		
 		
 		//если нажата таже ячейка то отменяем выделение и выходиим
 		if (this.ec1!==null) {
@@ -461,7 +455,6 @@ var puzzle = {
 		}
 		
 		game_res.resources.move.sound.play();
-
 
 		//если уже выделена одная ячейка
 		if (this.ec1!==null) {			
@@ -1654,7 +1647,7 @@ var puzzle_complete_message= {
 			
 			if (cur_progress >= 0) {
 				objects.cur_progress_point.x=objects.fin_points[cur_progress].x;
-				objects.cur_progress_point.y=objects.fin_points[cur_progress].y-5;		
+				objects.cur_progress_point.y=objects.fin_points[cur_progress].y+3;		
 				objects.cur_progress_point.visible = true;
 			} else {
 				objects.cur_progress_point.visible = false;				
@@ -1721,9 +1714,6 @@ var puzzle_complete_message= {
 			},1500)
 		}		
 					
-					
-
-		
 		
 		//добавляем дополнение к радуге если новые рекорды
 		if (params.my_new_record === 1 || params.game_new_record === 1) {			
@@ -1922,6 +1912,7 @@ var auth = function() {
 
 			local: function(repeat = 0) {
 
+				game_platform="YANDEX";
 
 				//ищем в локальном хранилище
 				let local_uid = localStorage.getItem('uid');
@@ -2199,54 +2190,54 @@ function init_game_env() {
 
     //создаем спрайты и массивы спрайтов и запускаем первую часть кода
     for (var i = 0; i < load_list.length; i++) {
-        const obj_class = load_list[i][0];
-        const obj_name = load_list[i][1];
+        const obj_class = load_list[i].class;
+        const obj_name = load_list[i].name;
 
         switch (obj_class) {
         case "sprite":
             objects[obj_name] = new PIXI.Sprite(game_res.resources[obj_name].texture);
-            eval(load_list[i][2]);
+            eval(load_list[i].code0);
             break;
 
         case "block":
-            eval(load_list[i][2]);
+            eval(load_list[i].code0);
             break;
 
         case "cont":
-            eval(load_list[i][2]);
+            eval(load_list[i].code0);
             break;
 
         case "array":
-			var a_size=load_list[i][2];
+			var a_size=load_list[i].size;
 			objects[obj_name]=[];
 			for (var n=0;n<a_size;n++)
-				eval(load_list[i][3]);
+				eval(load_list[i].code0);
             break;
         }
     }
 
     //обрабатываем вторую часть кода в объектах
     for (var i = 0; i < load_list.length; i++) {
-        const obj_class = load_list[i][0];
-        const obj_name = load_list[i][1];
+        const obj_class = load_list[i].class;
+        const obj_name = load_list[i].name;
 
         switch (obj_class) {
         case "sprite":
-            eval(load_list[i][3]);
+            eval(load_list[i].code1);
             break;
 
         case "block":
-            eval(load_list[i][3]);
+            eval(load_list[i].code1);
             break;
 
         case "cont":	
-	        eval(load_list[i][3]);
+	        eval(load_list[i].code1);
             break;
 
         case "array":
-			var a_size=load_list[i][2];
+			var a_size=load_list[i].size;
 				for (var n=0;n<a_size;n++)
-					eval(load_list[i][4]);	;
+					eval(load_list[i].code1);	;
             break;
         }
     }
@@ -2330,11 +2321,11 @@ function load_resources() {
     //добавляем из листа загрузки
     for (var i = 0; i < load_list.length; i++) {
 		
-        if (load_list[i][0] == "sprite" )
-            game_res.add(load_list[i][1], git_src+"res/" + load_list[i][1] + "." +  load_list[i][4]);		
+        if (load_list[i].class === "sprite" )
+            game_res.add(load_list[i].name, git_src+"res/" + load_list[i].name + "." +  load_list[i].image_format);		
 		
-        if (load_list[i][0] == "image")
-            game_res.add(load_list[i][1], git_src+"res/" + load_list[i][1] + "." +  load_list[i][2]);
+        if (load_list[i].class === "image")
+            game_res.add(load_list[i].name, git_src+"res/" + load_list[i].name + "." +  load_list[i].image_format);
 		
 	}
 
