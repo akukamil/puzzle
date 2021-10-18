@@ -1762,7 +1762,7 @@ var puzzle_complete_message= {
             return;
 		}
 		
-		if (game_platform==='VK_WEB' || game_platform==='VK_MINIAPP')
+		if (game_platform==='VK')
 			vkBridge.send('VKWebAppShowInviteBox');
 	},
 	
@@ -1773,7 +1773,7 @@ var puzzle_complete_message= {
             return;
 		}
 		
-		if (game_platform==='VK_WEB' || game_platform==='VK_MINIAPP')
+		if (game_platform==='VK')
 			vkBridge.send('VKWebAppShowWallPostBox', {"message": `Мой рейтинг в игре Стикмэны-Дуэль ${my_data.balance}. А сколько наберешь ты?`});
 	}
 	
