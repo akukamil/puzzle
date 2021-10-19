@@ -2117,9 +2117,9 @@ var lb={
 				//загружаем тройку лучших
 				for (let i=0;i<3;i++) {
 					let fname=players_array[i][0];					
-					make_text(objects['lb_1_name'],fname,180);
+					make_text(objects['lb_'+(i+1)+'_name'],fname,180);
 					
-					objects['lb_'+(i+1)+'_name'].text=fname;
+					//objects['lb_'+(i+1)+'_name'].text=fname;
 					objects['lb_'+(i+1)+'_balance'].text=players_array[i][1];					
 					loader.add('leaders_avatar_'+i, players_array[i][2],loaderOptions);
 				};
