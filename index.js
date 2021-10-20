@@ -2033,9 +2033,7 @@ var lb={
 	activate: function() {
 			
 		
-		anim.add_pos({obj:objects.lb_1_cont,param:'x',vis_on_end:true,func:'linear',val:[450,'sx'],	speed:0.03});
-		anim.add_pos({obj:objects.lb_2_cont,param:'x',vis_on_end:true,func:'linear',val:[450,'sx'],	speed:0.03});
-		anim.add_pos({obj:objects.lb_3_cont,param:'x',vis_on_end:true,func:'linear',val:[450,'sx'],	speed:0.03});
+
 		anim.add_pos({obj:objects.lb_cards_cont,param:'x',vis_on_end:true,func:'linear',val:[450,0],	speed:0.03});
 		
 		objects.lb_cards_cont.visible=true;
@@ -2109,7 +2107,7 @@ var lb={
 				
 				
 				//загружаем аватар соперника
-				var loaderOptions = {loadType: PIXI.LoaderResource.LOAD_TYPE.IMAGE};
+				var loaderOptions = {loadType: PIXI.LoaderResource.LOAD_TYPE.IMAGE, timeout: 4000};
 				var loader = new PIXI.Loader();
 								
 				var len=Math.min(10,players_array.length);
@@ -2140,8 +2138,18 @@ var lb={
 				
 				
 				loader.load((loader, resources) => {
-					for (let i=0;i<3;i++)						
-						objects['lb_'+(i+1)+'_avatar'].texture=resources['leaders_avatar_'+i].texture;
+					
+
+					for (let i=0;i<3;i++)
+						objects['lb_'+(i+1)+'_avatar'].texture=resources['leaders_avatar_'+i].texture;						
+
+					objects.lb_1_cont.cacheAsBitmap  = true;
+					objects.lb_2_cont.cacheAsBitmap  = true;
+					objects.lb_3_cont.cacheAsBitmap  = true;		
+
+					anim.add_pos({obj:objects.lb_1_cont,param:'x',vis_on_end:true,func:'linear',val:[450,'sx'],	speed:0.03});
+					anim.add_pos({obj:objects.lb_2_cont,param:'x',vis_on_end:true,func:'linear',val:[450,'sx'],	speed:0.03});
+					anim.add_pos({obj:objects.lb_3_cont,param:'x',vis_on_end:true,func:'linear',val:[450,'sx'],	speed:0.03});					
 					
 					for (let i=3;i<10;i++)						
 						objects.lb_cards[i-3].avatar.texture=resources['leaders_avatar_'+i].texture;
