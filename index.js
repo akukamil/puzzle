@@ -1775,7 +1775,7 @@ var puzzle_complete_message= {
 		
 		if (game_platform==='VK')
 			vkBridge.send('VKWebAppShowWallPostBox', {"message": `Мой рекорд в игре Своп-Паззы ${my_data.record}. А твой?`,
-			"attachments": "https://vk.com/app7729354_39099558"});
+			"attachments": "https://vk.com/app7729354"});
 	}
 	
 }
