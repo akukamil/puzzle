@@ -1663,11 +1663,11 @@ var puzzle_complete_message= {
 
 			
 			if (params.is_bonus_received === 1) {				
-				objects.game_complete_0.text="Паззл собран!\nВы уложились в бонусное время!";				
+				objects.game_complete_0.text="Пазл собран!\nВы уложились в бонусное время!";				
 				objects.game_complete_1.text="";						
 			} else {
 				
-				objects.game_complete_0.text="Паззл собран!\nНо бонус и прогресс потеряны(((";	
+				objects.game_complete_0.text="Пазл собран!\nНо бонус и прогресс потеряны(((";	
 				objects.game_complete_1.text="";				
 			}
 			
@@ -1684,7 +1684,7 @@ var puzzle_complete_message= {
 			objects.my_record_point.visible = false;
 			
 			objects.game_complete_0.text="";	
-			objects.game_complete_1.text="Паззл собран!!!";	
+			objects.game_complete_1.text="Пазл собран!!!";	
 		}
 				
 		//проверяем личный новый рекорд
@@ -1774,7 +1774,7 @@ var puzzle_complete_message= {
 		}
 		
 		if (game_platform==='VK')
-			vkBridge.send('VKWebAppShowWallPostBox', {"message": `Мой рекорд в игре Своп-Паззлы ${my_data.record}. А твой?`,
+			vkBridge.send('VKWebAppShowWallPostBox', {"message": `Мой рекорд в игре Своп-Паззы ${my_data.record}. А твой?`,
 			"attachments": "https://vk.com/app7729354_39099558"});
 	}
 	
