@@ -2330,8 +2330,8 @@ function load_resources() {
     game_res = new PIXI.Loader();
 	
 	
-	//let git_src="https://akukamil.github.io/puzzle/"
-	let git_src=""
+	let git_src="https://akukamil.github.io/puzzle/"
+	//let git_src=""
 	
 
 	game_res.add("m2_font", git_src+"m_font.fnt");
