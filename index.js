@@ -2106,8 +2106,7 @@ var lb={
 				players_array.sort(function(a, b) {	return b[1] - a[1];});
 				
 				
-				//загружаем аватар соперника
-				var loaderOptions = {loadType: PIXI.LoaderResource.LOAD_TYPE.IMAGE, timeout: 4000};
+				//загружаем аватары
 				var loader = new PIXI.Loader();
 								
 				var len=Math.min(10,players_array.length);
@@ -2116,10 +2115,18 @@ var lb={
 				for (let i=0;i<3;i++) {
 					let fname=players_array[i][0];					
 					make_text(objects['lb_'+(i+1)+'_name'],fname,180);
-					
+										
 					//objects['lb_'+(i+1)+'_name'].text=fname;
 					objects['lb_'+(i+1)+'_balance'].text=(players_array[i][1]+1);					
-					loader.add('leaders_avatar_'+i, players_array[i][2],loaderOptions);
+					
+					
+					let pic_url = players_array[i][2];
+					
+					//меняем адрес который невозможно загрузить
+					if (pic_url==="https://vk.com/images/camera_100.png")
+						pic_url = "https://i.ibb.co/fpZ8tg2/vk.jpg";					
+					
+					loader.add('leaders_avatar_'+i, pic_url, {loadType: PIXI.LoaderResource.LOAD_TYPE.IMAGE, timeout: 4000});
 				};
 				
 				//загружаем остальных
@@ -2131,7 +2138,7 @@ var lb={
 					
 					objects.lb_cards[i-3].name.text=fname;
 					objects.lb_cards[i-3].record.text=(players_array[i][1]+1);					
-					loader.add('leaders_avatar_'+i, players_array[i][2],loaderOptions);					
+					loader.add('leaders_avatar_'+i, players_array[i][2],{loadType: PIXI.LoaderResource.LOAD_TYPE.IMAGE, timeout: 3000});					
 					
 				};
 				
