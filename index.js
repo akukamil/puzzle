@@ -168,7 +168,7 @@ class lb_player_card_class extends PIXI.Container{
 		this.record=new PIXI.BitmapText(' ', {fontName: 'Century Gothic', fontSize: 35});
 		this.record.x=350;
 		this.record.tint=0x002222;
-		this.record.y=20;		
+		this.record.y=15;		
 		
 		this.addChild(this.bcg,this.place, this.avatar, this.name, this.record);		
 	}
@@ -1108,7 +1108,7 @@ var menu2= {
 		
 		
 		//обновляем рекорд
-		objects.record_header.text = my_data.record;
+		objects.record_header.text = (my_data.record + 1 );
 		
 		
 		//если ошибка при зазгрузе то показыаем кнопку бесплатной перезазгрузки
@@ -2293,7 +2293,7 @@ function init_game_env() {
 		firebase.database().ref("players/"+my_data.uid+"/record").set(my_data.record);
 		
 		//устанавливаем баланс в попап
-		objects.id_record.text=my_data.record;	
+		objects.id_record.text=(my_data.record+1);	
 		
 		//устанавливаем имя в верхнюю строчку
 		objects.my_name.text=my_data.name;	
@@ -2330,8 +2330,8 @@ function load_resources() {
     game_res = new PIXI.Loader();
 	
 	
-	let git_src="https://akukamil.github.io/puzzle/"
-	//let git_src=""
+	//let git_src="https://akukamil.github.io/puzzle/"
+	let git_src=""
 	
 
 	game_res.add("m2_font", git_src+"m_font.fnt");
