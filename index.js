@@ -2120,7 +2120,7 @@ var lb={
 					make_text(objects['lb_'+(i+1)+'_name'],fname,180);
 					
 					//objects['lb_'+(i+1)+'_name'].text=fname;
-					objects['lb_'+(i+1)+'_balance'].text=players_array[i][1];					
+					objects['lb_'+(i+1)+'_balance'].text=(players_array[i][1]+1);					
 					loader.add('leaders_avatar_'+i, players_array[i][2],loaderOptions);
 				};
 				
@@ -2132,7 +2132,7 @@ var lb={
 					make_text(objects.lb_cards[i-3],fname,180);
 					
 					objects.lb_cards[i-3].name.text=fname;
-					objects.lb_cards[i-3].record.text=players_array[i][1];					
+					objects.lb_cards[i-3].record.text=(players_array[i][1]+1);					
 					loader.add('leaders_avatar_'+i, players_array[i][2],loaderOptions);					
 					
 				};
