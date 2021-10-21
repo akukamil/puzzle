@@ -1365,12 +1365,16 @@ var game = {
 	bonus : 1,
 	time_result : 0,
 	start_time : 0,
+	change_pic_on_exit: 0,
 	progress_range_time : 0,
 	last_time_reward : 0,
 	finish_params : {3 :[30,0.025], 4:[25,0.03], 5:[20,0.035]},
     process: function () {},
 
     activate: function () {
+		
+		
+		
 		
 		game_res.resources.game_start.sound.play();
 		
@@ -1403,9 +1407,11 @@ var game = {
 			
 			objects.time_slider.scale.x = 0;
 			
+			
+			
 		}
 
-
+		this.change_pic_on_exit = 0;
 			
 		//фиксируем начало игры
 		game.start_time=game_tick;		
@@ -1442,7 +1448,7 @@ var game = {
 		big_message.show('Конец', 'Вы отменили игру!\n(((', '');
 		cur_progress =-1;
 		this.close();
-		menu2.activate(0);
+		menu2.activate(this.change_pic_on_exit);
 	},
 	
 	hint_button_down: function () {		
@@ -1473,7 +1479,8 @@ var game = {
 		//вычисляем прогресс
 		let sec_passes = game_tick - this.start_time;
 			
-		
+		if (sec_passes > 40)
+			this.change_pic_on_exit = 1;
 		
 		let perc = sec_passes / this.progress_range_time;
 
