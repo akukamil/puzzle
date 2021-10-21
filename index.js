@@ -2048,7 +2048,7 @@ var lb={
 	update: function () {
 		
 		
-		firebase.database().ref("players").orderByChild('record').limitToLast(25).once('value').then((snapshot) => {
+		firebase.database().ref("players").orderByChild('record').limitToFirst(25).once('value').then((snapshot) => {
 			
 			if (snapshot.val()===null) {
 			  console.log("Что-то не получилось получить данные о рейтингах");
