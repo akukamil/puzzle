@@ -1918,9 +1918,9 @@ var auth = function() {
 					
 				}).then((e)=>{
 					
-					my_data.name 	= e.detail.data.first_name + ' ' + e.detail.data.last_name;
-					my_data.uid 	= "vk"+e.detail.data.id;
-					my_data.pic_url = e.detail.data.photo_100;
+					my_data.name 	= e.data.first_name + ' ' + e.data.last_name;
+					my_data.uid 	= "vk"+e.data.id;
+					my_data.pic_url = e.data.photo_100;
 
 					//console.log(`Получены данные игрока от VB MINIAPP:\nимя:${my_data.name}\nid:${my_data.uid}\npic_url:${my_data.pic_url}`);
 					help_obj.process_results();		
