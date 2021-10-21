@@ -410,7 +410,7 @@ var puzzle = {
 				let perc_complete = Math.round(100 * this.completed / (this.size * this.size));
 				objects.complete_counter.text = `Завершено: ${perc_complete}%`;
 
-				//perc_complete=20;
+				perc_complete=100;
 				//проверяем что паззл собран
 				if (perc_complete === 100)		
 					game.process_finish(1)
@@ -1108,7 +1108,7 @@ var menu2= {
 		
 		
 		//обновляем рекорд
-		objects.record_header.text = (my_data.record + 1 )+" сек.";
+		objects.record_header.text = (my_data.record + 1 );
 		
 		
 		//если ошибка при зазгрузе то показыаем кнопку бесплатной перезазгрузки
@@ -1127,7 +1127,7 @@ var menu2= {
 		objects.pic_changes_text.text=my_data.fpc;
 		
 		//получаем и отображаем глобальный топ игры чтобы потом использовать
-		firebase.database().ref("players").orderByChild('record').limitToFirst(1).once('value').then((snapshot) => {
+		firebase.database().ref("players").orderByChild('record').limitToLast(1).once('value').then((snapshot) => {
 			
 			let res = snapshot.val();
 			if (res===null) {
@@ -1367,7 +1367,7 @@ var game = {
 	start_time : 0,
 	change_pic_on_exit: 0,
 	progress_range_time : 0,
-	last_time_reward : 0,
+	last_record : 0,
 	finish_params : {3 :[30,0.025], 4:[25,0.03], 5:[20,0.035]},
     process: function () {},
 
@@ -1399,13 +1399,12 @@ var game = {
 			
 			this.progress_range_time = my_data.record*1.2;
 			
-			objects.my_record_point.x=30 + 370 * my_data.record/this.progress_range_time;
-			objects.my_record_point.y=40;
+			objects.my_record_point.x = 30 + my_data.record * 320 / 300;
+			objects.top_record_point.x = 30 + global_record * 320 / 300;
 			
-			objects.top_record_point.x=30 + 370 * global_record/this.progress_range_time;
-			objects.top_record_point.y=0;
+			objects.g_progress.text = '300';
 			
-			objects.time_slider.scale.x = 0;
+			objects.time_slider.scale.x = 1;
 			
 			
 			
@@ -1482,10 +1481,17 @@ var game = {
 		if (sec_passes > 40)
 			this.change_pic_on_exit = 1;
 		
-		let perc = sec_passes / this.progress_range_time;
+		let perc = 1 - sec_passes / 300;
 
-		if (perc < 1.001)
+
+		
+		if (perc > 0.001) {
 			objects.time_slider.scale.x =  perc;		
+			this.last_record = Math.round(300*perc);	
+			objects.g_progress.text = this.last_record;			
+			objects.g_progress.x = objects.time_slider.width+35;
+		}
+		
 			
 	},
 	
@@ -1556,16 +1562,18 @@ var game = {
 		let my_new_record = 0;
 		let game_new_record = 0;
 		let is_bonus_game = 0;
-		let is_bonus_received = 0;
 		
 		//это бонусная игра
 		if (puzzle.size === 5) {
-				
+							
+			
+			is_bonus_game = 1;
+			
 			//если новый личный рекорд
-			if (this.time_result < my_data.record) {	
+			if (this.last_record > my_data.record) {	
 			
 				//добавить новый рекорд
-				my_data.record=this.time_result;
+				my_data.record=this.last_record;
 				
 				my_new_record = 1;
 				
@@ -1574,17 +1582,17 @@ var game = {
 			}	
 			
 			//если новый глобальный рекорд
-			if (this.time_result < global_record) {	
+			if (this.last_record > global_record) {	
 			
 				//добавить новый рекорд
-				global_record=this.time_result;
+				global_record=this.last_record;
 				
 				game_new_record = 1;					
 			}			
 
 		} 		
 
-		return {my_new_record :my_new_record, game_new_record:game_new_record, is_bonus_game :is_bonus_game, is_bonus_received : is_bonus_received}
+		return {my_new_record :my_new_record, game_new_record:game_new_record, is_bonus_game :is_bonus_game}
 	},
 		
 	made_a_swap : function () {
@@ -1609,21 +1617,36 @@ var game = {
 
 var puzzle_complete_message= {
 	
-	show : function(params = {my_new_record :0, game_new_record:0, is_bonus_game :0, is_bonus_received : 0}) {
+	show : function(params = {my_new_record :0, game_new_record:0, is_bonus_game :0}) {
 								
 		//показыаем шкалу достижений
 		if (params.is_bonus_game === 1) {
 			
-			
-			if (params.is_bonus_received === 1) {				
-				objects.game_complete_0.text="Пазл собран!\nВы уложились в бонусное время!";				
-				objects.game_complete_1.text="";						
-			} else {
+			objects.game_complete_0.text="Пазл собран!";				
+			objects.game_complete_1.text="Жаль только что не побили рекорд(((";						
+
+			//проверяем личный новый рекорд
+			if (params.my_new_record === 1) {
 				
-				objects.game_complete_0.text="Пазл собран!\nНо бонус и прогресс потеряны(((";	
-				objects.game_complete_1.text="";				
+				objects.game_complete_0.text="Пазл собран и вы побили свой рекорд!";				
+				objects.game_complete_1.text="А попробуйте побить рекорд игры?";		
+				
+				setTimeout(function() {
+					game_res.resources.new_record.sound.play();
+					mini_message.show("Новый личный рекорд!");						
+				},700)
 			}
 			
+			//проверяем глобальный рекорд
+			if (params.game_new_record === 1) {
+				
+				objects.game_complete_0.text="Пазл собран!";				
+				objects.game_complete_1.text="Вы побили рекорд игры!\nМолодец!";	
+				setTimeout(function() {
+					game_res.resources.new_record2.sound.play();
+					mini_message.show("Новый рекорд игры!");						
+				},1500)
+			}							
 			
 		}
 				
@@ -1634,22 +1657,7 @@ var puzzle_complete_message= {
 			objects.game_complete_1.text="Пазл собран!!!";	
 		}
 				
-		//проверяем личный новый рекорд
-		if (params.my_new_record === 1) {
-			setTimeout(function() {
-				game_res.resources.new_record.sound.play();
-				mini_message.show("Новый личный рекорд!");						
-			},700)
-		}
 		
-		//проверяем глобальный рекорд
-		if (params.game_new_record === 1) {
-			setTimeout(function() {
-				game_res.resources.new_record2.sound.play();
-				mini_message.show("Новый рекорд игры!");						
-			},1500)
-		}		
-					
 		
 		//добавляем дополнение к радуге если новые рекорды
 		if (params.my_new_record === 1 || params.game_new_record === 1) {			
@@ -1719,7 +1727,7 @@ var puzzle_complete_message= {
 		}
 		
 		if (game_platform==='VK')
-			vkBridge.send('VKWebAppShowWallPostBox', {"message": `Я собраз пазл 5х5 за ${my_data.record} секунд. А за сколько сможешь ты?`,
+			vkBridge.send('VKWebAppShowWallPostBox', {"message": `Мой уровень в игре своп-пазлы ${my_data.record}. А сколько наберешь ты?`,
 			"attachments": "https://vk.com/app7729354"});
 	}
 	
@@ -2040,7 +2048,7 @@ var lb={
 	update: function () {
 		
 		
-		firebase.database().ref("players").orderByChild('record').limitToFirst(25).once('value').then((snapshot) => {
+		firebase.database().ref("players").orderByChild('record').limitToLast(25).once('value').then((snapshot) => {
 			
 			if (snapshot.val()===null) {
 			  console.log("Что-то не получилось получить данные о рейтингах");
@@ -2068,7 +2076,7 @@ var lb={
 					make_text(objects['lb_'+(i+1)+'_name'],fname,180);
 										
 					//objects['lb_'+(i+1)+'_name'].text=fname;
-					objects['lb_'+(i+1)+'_balance'].text=(players_array[i][1]+1)+ " сек.";					
+					objects['lb_'+(i+1)+'_balance'].text=(players_array[i][1]+1);					
 					
 					
 					let pic_url = players_array[i][2];
@@ -2083,12 +2091,13 @@ var lb={
 				//загружаем остальных
 				for (let i=3;i<10;i++) {
 					let fname=players_array[i][0];	
-					//objects.lb_cards[i-3].full_name=fname;
+					if (fname === undefined)
+						break;
 					
 					make_text(objects.lb_cards[i-3],fname,180);
 					
 					objects.lb_cards[i-3].name.text=fname;
-					objects.lb_cards[i-3].record.text=(players_array[i][1]+1)+ " сек.";	;					
+					objects.lb_cards[i-3].record.text=(players_array[i][1]+1)	;					
 					loader.add('leaders_avatar_'+i, players_array[i][2],{loadType: PIXI.LoaderResource.LOAD_TYPE.IMAGE, timeout: 3000});					
 					
 				};
@@ -2206,6 +2215,7 @@ function init_game_env() {
             break;
 
         case "block":
+			console.log(i)
             eval(load_list[i].code1);
             break;
 
@@ -2244,7 +2254,7 @@ function init_game_env() {
 		
 		
 		if (data.record === undefined)
-			my_data.record = 300;
+			my_data.record = 0;
 		else
 			my_data.record = data.record;
 		
