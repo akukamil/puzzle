@@ -1082,6 +1082,11 @@ var main_menu = {
 		if (game_tick>this.start_time+5) {
 			this.start_time=game_tick;
 		}
+		
+		if (objects.id_loup.visible === true) {			
+			objects.id_loup.x=20*Math.sin(game_tick*8)+90;
+			objects.id_loup.y=20*Math.cos(game_tick*8)+110;
+		}
 	}
 	
 }
