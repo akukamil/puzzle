@@ -1825,10 +1825,13 @@ var auth = function() {
 
 				//-----------ЯНДЕКС------------------------------------
 				if (s.includes("yandex")) {
+					game_platform="YANDEX";
 					Promise.all([
 						this.loadScript('https://yandex.ru/games/sdk/v2')
 					]).then(function(){
 						help_obj.yandex();
+					}).catch(function(e){
+						alert(e);
 					});
 					return;
 				}
@@ -1836,6 +1839,7 @@ var auth = function() {
 
 				//-----------ВКОНТАКТЕ------------------------------------
 				if (s.includes("vk.com")) {
+					game_platform="VK";
 					Promise.all([
 						this.loadScript('https://vk.com/js/api/xd_connection.js?2'),
 						this.loadScript('//ad.mail.ru/static/admanhtml/rbadman-html5.min.js'),
@@ -1844,26 +1848,27 @@ var auth = function() {
 
 					]).then(function(){
 						help_obj.vk()
+					}).catch(function(e){
+						alert(e);
 					});
 					return;
 				}
 
-
 				//-----------ЛОКАЛЬНЫЙ СЕРВЕР--------------------------------
 				if (s.includes("192.168")) {
+					game_platform="debug";
 					help_obj.debug();
 					return;
 				}
 
-
 				//-----------НЕИЗВЕСТНОЕ ОКРУЖЕНИЕ---------------------------
+				game_platform="unknown";
 				help_obj.unknown();
 
 			},
 
 			yandex: function() {
 
-				game_platform="YANDEX";
 				if(typeof(YaGames)==='undefined')
 				{
 					help_obj.local();
@@ -1895,7 +1900,7 @@ var auth = function() {
 						help_obj.process_results();
 
 					}).catch((err)=>{
-
+						
 						//загружаем из локального хранилища если нет авторизации в яндексе
 						help_obj.local();
 
@@ -1905,16 +1910,32 @@ var auth = function() {
 
 			vk: function() {
 
-				game_platform="VK";
-				vkBridge.subscribe((e) => this.vkbridge_events(e));
-				vkBridge.send('VKWebAppInit');
-				vkBridge.send('VKWebAppGetUserInfo');
+
+				//vkBridge.subscribe((e) => this.vkbridge_events(e));
+				vkBridge.send('VKWebAppInit').then(()=>{
+					
+					return vkBridge.send('VKWebAppGetUserInfo');
+					
+				}).then((e)=>{
+					
+					my_data.name 	= e.detail.data.first_name + ' ' + e.detail.data.last_name;
+					my_data.uid 	= "vk"+e.detail.data.id;
+					my_data.pic_url = e.detail.data.photo_100;
+
+					//console.log(`Получены данные игрока от VB MINIAPP:\nимя:${my_data.name}\nid:${my_data.uid}\npic_url:${my_data.pic_url}`);
+					help_obj.process_results();		
+					
+				}).catch(function(e){
+					
+					alert(e);
+					
+				});
+				
 
 			},
 
 			debug: function() {
 
-				game_platform = "debug";
 				let uid = prompt('Отладка. Введите ID', 100);
 
 				my_data.name = my_data.uid = "debug" + uid;
@@ -1925,8 +1946,6 @@ var auth = function() {
 			},
 
 			local: function(repeat = 0) {
-
-				game_platform="YANDEX";
 
 				//ищем в локальном хранилище
 				let local_uid = localStorage.getItem('uid');
@@ -1990,7 +2009,6 @@ var auth = function() {
 
 			unknown: function () {
 
-				game_platform="unknown";
 				alert("Неизвестная платформа! Кто Вы?")
 
 				//загружаем из локального хранилища
@@ -2317,8 +2335,7 @@ function init_game_env() {
 		if (game_platform!=="VK") {
 			objects.vk_invite_button.visible = false;
 			objects.vk_post_button.visible = false;			
-		}
-			
+		}			
 			
 		activity_on=0;	
 		
@@ -2326,11 +2343,11 @@ function init_game_env() {
 			setTimeout(resolve, 1500);
 		});
 		
-	}).then(()=>{
-		
-		anim.add_pos({obj: objects.id_cont,param: 'y',vis_on_end: false,func: 'easeInBack',val: ['y',-200],	speed: 0.03});
-		
-	})
+	}).then(()=>{		
+		anim.add_pos({obj: objects.id_cont,param: 'y',vis_on_end: false,func: 'easeInBack',val: ['y',-200],	speed: 0.03});		
+	}).catch(function(e){
+		alert(e);
+	});
 		
 	//запускаем главное меню
 	main_menu.activate();
