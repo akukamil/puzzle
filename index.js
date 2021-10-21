@@ -468,7 +468,7 @@ var puzzle = {
 			this.ec2.prepare_shuffle(this.ec1.cur_id,this.size, this.cell_size, this.image_size);
 			
 			//сообщаем в игру что сдела своп
-			//game.made_a_swap();
+			game.made_a_swap();
 			
 			state="shuffling";
 			this.tween_amount=0;
@@ -1597,7 +1597,7 @@ var game = {
 		
 	made_a_swap : function () {
 		
-		this.start_time -= 1; 
+		this.start_time -= 3; 
 		
 	},
 	
