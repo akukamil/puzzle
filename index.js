@@ -2102,7 +2102,7 @@ var lb={
 					
 					let fname=p[0];		
 					
-					make_text(objects.lb_cards[i-3],fname,220);
+					make_text(objects.lb_cards[i-3].name,fname,220);
 					
 					objects.lb_cards[i-3].record.text=(players_array[i][1]+1)	;					
 					loader.add('leaders_avatar_'+i, players_array[i][2],{loadType: PIXI.LoaderResource.LOAD_TYPE.IMAGE, timeout: 3000});					
