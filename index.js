@@ -1804,19 +1804,6 @@ var auth = function() {
 			  })
 			},
 
-			vkbridge_events: function(e) {
-
-				if (e.detail.type === 'VKWebAppGetUserInfoResult') {
-
-					my_data.name 	= e.detail.data.first_name + ' ' + e.detail.data.last_name;
-					my_data.uid 	= "vk"+e.detail.data.id;
-					my_data.pic_url = e.detail.data.photo_100;
-
-					//console.log(`Получены данные игрока от VB MINIAPP:\nимя:${my_data.name}\nid:${my_data.uid}\npic_url:${my_data.pic_url}`);
-					help_obj.process_results();
-				}
-			},
-
 			init: function() {
 
 				g_process=function() { help_obj.process()};
