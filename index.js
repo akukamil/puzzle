@@ -1485,7 +1485,7 @@ var game = {
 		let perc = sec_passes / this.progress_range_time;
 
 		if (perc < 1.001)
-			objects.time_slider.scale.x =  perc;		
+			objects.time_slider.scale.x =  1-perc;		
 			
 	},
 	
