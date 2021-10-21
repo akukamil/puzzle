@@ -1439,7 +1439,7 @@ var game = {
 		game_res.resources.lose.sound.play();
 		
 		puzzle.start_back_shuffle();
-		big_message.show('Конец', 'Вы отменили игру!\nПрогресс потерян(((', '');
+		big_message.show('Конец', 'Вы отменили игру!\n(((', '');
 		cur_progress =-1;
 		this.close();
 		menu2.activate(0);
