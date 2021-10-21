@@ -166,7 +166,7 @@ class lb_player_card_class extends PIXI.Container{
 		
 	
 		this.record=new PIXI.BitmapText(' ', {fontName: 'Century Gothic', fontSize: 30});
-		this.record.x=320;
+		this.record.x=340;
 		this.record.tint=0x002222;
 		this.record.y=20;		
 		
@@ -410,7 +410,7 @@ var puzzle = {
 				let perc_complete = Math.round(100 * this.completed / (this.size * this.size));
 				objects.complete_counter.text = `Завершено: ${perc_complete}%`;
 
-				perc_complete=100;
+				//perc_complete=100;
 				//проверяем что паззл собран
 				if (perc_complete === 100)		
 					game.process_finish(1)
@@ -2072,14 +2072,18 @@ var lb={
 				
 				//загружаем тройку лучших
 				for (let i=0;i<3;i++) {
-					let fname=players_array[i][0];					
+					let p = players_array[i];
+					if (p === undefined)
+						break;
+					
+					let fname=p[0];					
 					make_text(objects['lb_'+(i+1)+'_name'],fname,180);
 										
 					//objects['lb_'+(i+1)+'_name'].text=fname;
-					objects['lb_'+(i+1)+'_balance'].text=(players_array[i][1]+1);					
+					objects['lb_'+(i+1)+'_balance'].text=(p[1]+1);					
 					
 					
-					let pic_url = players_array[i][2];
+					let pic_url = p[2];
 					
 					//меняем адрес который невозможно загрузить
 					if (pic_url==="https://vk.com/images/camera_100.png")
@@ -2090,13 +2094,16 @@ var lb={
 				
 				//загружаем остальных
 				for (let i=3;i<10;i++) {
-					let fname=players_array[i][0];	
-					if (fname === undefined)
+					
+					let p = players_array[i];
+
+					if (p === undefined)
 						break;
 					
-					make_text(objects.lb_cards[i-3],fname,180);
+					let fname=p[0];		
 					
-					objects.lb_cards[i-3].name.text=fname;
+					make_text(objects.lb_cards[i-3],fname,220);
+					
 					objects.lb_cards[i-3].record.text=(players_array[i][1]+1)	;					
 					loader.add('leaders_avatar_'+i, players_array[i][2],{loadType: PIXI.LoaderResource.LOAD_TYPE.IMAGE, timeout: 3000});					
 					
