@@ -2210,9 +2210,7 @@ function init_game_env() {
             break;
 
         case "cont":	
-	        console.log(i);
 			eval(load_list[i].code1);
-			
             break;
 
         case "array":
