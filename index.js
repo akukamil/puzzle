@@ -1918,6 +1918,7 @@ var auth = function() {
 					
 				}).then((e)=>{
 					
+					alert(e);
 					my_data.name 	= e.data.first_name + ' ' + e.data.last_name;
 					my_data.uid 	= "vk"+e.data.id;
 					my_data.pic_url = e.data.photo_100;
