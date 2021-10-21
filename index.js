@@ -166,7 +166,7 @@ class lb_player_card_class extends PIXI.Container{
 		
 	
 		this.record=new PIXI.BitmapText(' ', {fontName: 'Century Gothic', fontSize: 35});
-		this.record.x=350;
+		this.record.x=320;
 		this.record.tint=0x002222;
 		this.record.y=15;		
 		
@@ -1108,7 +1108,7 @@ var menu2= {
 		
 		
 		//обновляем рекорд
-		objects.record_header.text = (my_data.record + 1 );
+		objects.record_header.text = (my_data.record + 1 )+" сек.";
 		
 		
 		//если ошибка при зазгрузе то показыаем кнопку бесплатной перезазгрузки
@@ -1127,7 +1127,7 @@ var menu2= {
 		objects.pic_changes_text.text=my_data.fpc;
 		
 		//получаем и отображаем глобальный топ игры чтобы потом использовать
-		firebase.database().ref("players").orderByChild('record').limitToLast(1).once('value').then((snapshot) => {
+		firebase.database().ref("players").orderByChild('record').limitToFirst(1).once('value').then((snapshot) => {
 			
 			let res = snapshot.val();
 			if (res===null) {
@@ -1276,8 +1276,7 @@ var menu2= {
 			width:[objects.puzzle_img.width,puzzle.width],
 			height:[objects.puzzle_img.height,puzzle.width],			
 		}, true, 0.03,'easeOutBack');
-		
-		
+			
 		
 		//обновляем размер и положение сетки		
 		anim2.add(objects['net_'+puzzle.size],{
@@ -1286,13 +1285,9 @@ var menu2= {
 			alpha: [0,1]
 		}, true, 0.03,'easeOutBack');
 		
-		
-		
+				
 		//устанавливаем фрейм
 		objects.selection_frame.x=objects['f'+puzzle.size+'_button'].x;
-		
-
-		
 
 
 	},
@@ -1368,7 +1363,9 @@ var game = {
 	start_time: 0,
 	timer : 0,
 	bonus : 1,
-	bonus_time : 200,
+	time_result : 0,
+	start_time : 0,
+	progress_range_time : 0,
 	last_time_reward : 0,
 	finish_params : {3 :[30,0.025], 4:[25,0.03], 5:[20,0.035]},
     process: function () {},
@@ -1388,24 +1385,34 @@ var game = {
 			
 			
 		//добавляем кнопки
-		anim.add_pos({obj: objects.game_buttons_cont,param: 		'x',vis_on_end: true,func: 'linear',val: [450,'sx'],	speed: 0.03});
+		anim.add_pos({obj: objects.game_buttons_cont,param:	'x',vis_on_end: true,func: 'linear',val: [450,'sx'],	speed: 0.03});
 		
-		
-		
+				
 		//добавляем прогресс 
-		if (puzzle.size === 5)
-			anim.add_pos({obj: objects.progress_cont,param: 		'x',vis_on_end: true,func: 'linear',val: [450,'sx'],	speed: 0.03	});
-
-		//восстанавливаем прогрессы
-		anim.add_scl({obj: objects.time_slider,param: 'x',vis_on_end: true,func: 'easeInOutQuad',val: [objects.time_slider.scale.x,1],	speed: 0.01, callback : function() {
-						
-			//фиксируем начало игры
-			game.start_time=game_tick;		
-		
-			//утсанавливаем процессинговую функцию
-			g_process=function(){game.process()};			
+		if (puzzle.size === 5) {
 			
-		}});
+			anim.add_pos({obj: objects.progress_cont,param: 		'x',vis_on_end: true,func: 'linear',val: [450,'sx'],	speed: 0.03	});			
+			
+			this.progress_range_time = my_data.record*1.2;
+			
+			objects.my_record_point.x=30 + 370 * my_data.record/this.progress_range_time;
+			objects.my_record_point.y=40;
+			
+			objects.top_record_point.x=30 + 370 * global_record/this.progress_range_time;
+			objects.top_record_point.y=0;
+			
+			objects.time_slider.scale.x = 0;
+			
+		}
+
+
+			
+		//фиксируем начало игры
+		game.start_time=game_tick;		
+	
+		//утсанавливаем процессинговую функцию
+		g_process=function(){game.process()};			
+		
 		
 		//показываем сколько подсказок есть
 		objects.hint_button_text.text=puzzle.hints_amount;
@@ -1462,23 +1469,17 @@ var game = {
 		if (puzzle.size !== 5)
 			return;
 		
-		
-		if (this.bonus === 1) {	
-		
-			//вычисляем бонусное время
-			let sec_passes = game_tick - this.start_time;
-			let perc = 1 - sec_passes / this.bonus_time;
-			if (perc < 0)	perc = 0;
 
+		//вычисляем прогресс
+		let sec_passes = game_tick - this.start_time;
+			
+		
+		
+		let perc = sec_passes / this.progress_range_time;
+
+		if (perc < 1.001)
 			objects.time_slider.scale.x =  perc;		
-				
-			if (perc === 0) {
-				game_res.resources.bonus_lost.sound.play();
-				big_message.show("(((", "Бонусное время закончилось", "Прогресс потерян(((");
-				this.bonus =0;				
-			}
-		}
-
+			
 	},
 	
 	process_finish : function (init) {
@@ -1488,6 +1489,8 @@ var game = {
 			activity_on=1;
 		
 			this.timer=0;
+			
+			this.time_result = Math.round(game_tick - this.start_time);
 			
 			objects.main_bcg.visible = true;
 			objects.mask_bcg.visible = false;
@@ -1550,49 +1553,28 @@ var game = {
 		
 		//это бонусная игра
 		if (puzzle.size === 5) {
-			
-			is_bonus_game = 1;			
-			
-			//бонус потреян
-			if (this.bonus === 0) {
 				
-				cur_progress = -1;
-				is_bonus_received = 0;
-				this.bonus_time = 200;
+			//если новый личный рекорд
+			if (this.time_result < my_data.record) {	
 			
-			}
+				//добавить новый рекорд
+				my_data.record=this.time_result;
+				
+				my_new_record = 1;
+				
+				//записываем в файербейс
+				firebase.database().ref("players/"+my_data.uid+"/record").set(my_data.record);
+			}	
 			
-			//бонус получен
-			if (this.bonus === 1) {
-				
-				cur_progress++;	
-				this.bonus_time -= 6;
-				
-				is_bonus_received = 1;
-								
+			//если новый глобальный рекорд
+			if (this.time_result < global_record) {	
 			
-			
-				//если новый личный рекорд
-				if (cur_progress > my_data.record) {	
+				//добавить новый рекорд
+				global_record=this.time_result;
 				
-					//добавить новый рекорд
-					my_data.record=cur_progress;
-					
-					my_new_record = 1;
-					
-					//записываем в файербейс
-					firebase.database().ref("players/"+my_data.uid+"/record").set(my_data.record);
-				}	
-				
-				//если новый глобальный рекорд
-				if (cur_progress > global_record) {	
-				
-					//добавить новый рекорд
-					global_record=cur_progress;
-					
-					game_new_record = 1;					
-				}			
-			}
+				game_new_record = 1;					
+			}			
+
 		} 		
 
 		return {my_new_record :my_new_record, game_new_record:game_new_record, is_bonus_game :is_bonus_game, is_bonus_received : is_bonus_received}
@@ -1625,42 +1607,6 @@ var puzzle_complete_message= {
 		//показыаем шкалу достижений
 		if (params.is_bonus_game === 1) {
 			
-			for (let i=0;i<25;i++) {	
-
-				objects.fin_points[i].visible =true;
-				objects.fin_points[i].tint = 0xffffff;
-				
-				if (cur_progress >= i)
-					objects.fin_points[i].tint = 0x443311;	
-			}			
-			
-			if (cur_progress >= 0) {
-				objects.cur_progress_point.x=objects.fin_points[cur_progress].x;
-				objects.cur_progress_point.y=objects.fin_points[cur_progress].y+3;		
-				objects.cur_progress_point.visible = true;
-			} else {
-				objects.cur_progress_point.visible = false;				
-			}
-					
-			if (my_data.record >= 0) {	
-				objects.my_record_point.visible = true;
-				objects.my_record_point.x=objects.fin_points[my_data.record].x;
-				objects.my_record_point.y=objects.fin_points[my_data.record].y+2;
-				objects.fin_points[my_data.record].tint = 0xFF00FF;
-			} else {
-				objects.my_record_point.visible = false;				
-			}
-			
-			if (global_record >= 0) {
-				objects.top_record_point.visible = true;		
-				objects.top_record_point.x=objects.fin_points[global_record].x;
-				objects.top_record_point.y=objects.fin_points[global_record].y+2;
-				objects.fin_points[global_record].tint = 0xFF0000;		 				
-			} else {
-				objects.top_record_point.visible = false;		
-			}
-			
-
 			
 			if (params.is_bonus_received === 1) {				
 				objects.game_complete_0.text="Пазл собран!\nВы уложились в бонусное время!";				
@@ -1676,13 +1622,7 @@ var puzzle_complete_message= {
 				
 		if (params.is_bonus_game === 0) {
 			
-			for (let i=0;i<25;i++)
-				objects.fin_points[i].visible =false;
-			
-			objects.cur_progress_point.visible = false;
-			objects.top_record_point.visible = false;
-			objects.my_record_point.visible = false;
-			
+						
 			objects.game_complete_0.text="";	
 			objects.game_complete_1.text="Пазл собран!!!";	
 		}
@@ -1750,9 +1690,7 @@ var puzzle_complete_message= {
 	process : function () {
 		if (objects.rainbow.visible===true)
 			objects.rainbow.rotation+=0.03;
-		
-		objects.top_record_point.rotation=Math.sin(game_tick*4)*0.1;
-		objects.my_record_point.rotation=Math.sin(game_tick*6)*0.1;
+
 	},
 	
 	vk_invite_down: function() {
@@ -1774,7 +1712,7 @@ var puzzle_complete_message= {
 		}
 		
 		if (game_platform==='VK')
-			vkBridge.send('VKWebAppShowWallPostBox', {"message": `Мой рекорд в игре Своп-Паззы ${my_data.record}. А твой?`,
+			vkBridge.send('VKWebAppShowWallPostBox', {"message": `Я собраз пазл 5х5 за ${my_data.record} секунд. А за сколько сможешь ты?`,
 			"attachments": "https://vk.com/app7729354"});
 	}
 	
@@ -2094,7 +2032,7 @@ var lb={
 	
 	update: function () {
 		
-		firebase.database().ref("players").orderByChild('record').limitToLast(25).once('value').then((snapshot) => {
+		firebase.database().ref("players").orderByChild('record').limitToFirst(25).once('value').then((snapshot) => {
 			
 			if (snapshot.val()===null) {
 			  console.log("Что-то не получилось получить данные о рейтингах");
@@ -2108,7 +2046,7 @@ var lb={
 				});
 				
 
-				players_array.sort(function(a, b) {	return b[1] - a[1];});
+				players_array.sort(function(a, b) {	return a[1] - b[1];});
 				
 				
 				//загружаем аватары
@@ -2122,7 +2060,7 @@ var lb={
 					make_text(objects['lb_'+(i+1)+'_name'],fname,180);
 										
 					//objects['lb_'+(i+1)+'_name'].text=fname;
-					objects['lb_'+(i+1)+'_balance'].text=(players_array[i][1]+1);					
+					objects['lb_'+(i+1)+'_balance'].text=(players_array[i][1]+1)+ " сек.";					
 					
 					
 					let pic_url = players_array[i][2];
@@ -2142,7 +2080,7 @@ var lb={
 					make_text(objects.lb_cards[i-3],fname,180);
 					
 					objects.lb_cards[i-3].name.text=fname;
-					objects.lb_cards[i-3].record.text=(players_array[i][1]+1);					
+					objects.lb_cards[i-3].record.text=(players_array[i][1]+1)+ " сек.";	;					
 					loader.add('leaders_avatar_'+i, players_array[i][2],{loadType: PIXI.LoaderResource.LOAD_TYPE.IMAGE, timeout: 3000});					
 					
 				};
@@ -2177,8 +2115,7 @@ var lb={
 
 function init_game_env() {
 			
-		
-	
+			
 	//инициируем файербейс
 	if (firebase.apps.length===0) {
 		firebase.initializeApp({
@@ -2265,7 +2202,9 @@ function init_game_env() {
             break;
 
         case "cont":	
-	        eval(load_list[i].code1);
+	        console.log(i);
+			eval(load_list[i].code1);
+			
             break;
 
         case "array":
@@ -2299,7 +2238,7 @@ function init_game_env() {
 		
 		
 		if (data.record === undefined)
-			my_data.record = -1;
+			my_data.record = 300;
 		else
 			my_data.record = data.record;
 		
