@@ -1113,7 +1113,7 @@ var menu2= {
 		
 		
 		//обновляем рекорд
-		objects.record_header.text = (my_data.record + 1 );
+		objects.record_header.text = my_data.record;
 		
 		
 		//если ошибка при зазгрузе то показыаем кнопку бесплатной перезазгрузки
@@ -1371,7 +1371,6 @@ var game = {
 	time_result : 0,
 	start_time : 0,
 	change_pic_on_exit: 0,
-	progress_range_time : 0,
 	last_record : 0,
 	finish_params : {3 :[30,0.025], 4:[25,0.03], 5:[20,0.035]},
     process: function () {},
@@ -1401,8 +1400,6 @@ var game = {
 		if (puzzle.size === 5) {
 			
 			anim.add_pos({obj: objects.progress_cont,param: 		'x',vis_on_end: true,func: 'linear',val: [450,'sx'],	speed: 0.03	});			
-			
-			this.progress_range_time = my_data.record*1.2;
 			
 			objects.my_record_point.x = 30 + my_data.record * 320 / 300;
 			objects.top_record_point.x = 30 + global_record * 320 / 300;
@@ -2090,7 +2087,7 @@ var lb={
 					make_text(objects['lb_'+(i+1)+'_name'],fname,180);
 										
 					//objects['lb_'+(i+1)+'_name'].text=fname;
-					objects['lb_'+(i+1)+'_balance'].text=(p[1]+1);					
+					objects['lb_'+(i+1)+'_balance'].text = p[1];					
 					
 					
 					let pic_url = p[2];
@@ -2114,7 +2111,7 @@ var lb={
 					
 					make_text(objects.lb_cards[i-3].name,fname,220);
 					
-					objects.lb_cards[i-3].record.text=(players_array[i][1]+1)	;					
+					objects.lb_cards[i-3].record.text=players_array[i][1]	;					
 					loader.add('leaders_avatar_'+i, players_array[i][2],{loadType: PIXI.LoaderResource.LOAD_TYPE.IMAGE, timeout: 3000});					
 					
 				};
@@ -2285,7 +2282,7 @@ function init_game_env() {
 		firebase.database().ref("players/"+my_data.uid+"/record").set(my_data.record);
 		
 		//устанавливаем баланс в попап
-		objects.id_record.text=(my_data.record+1);	
+		objects.id_record.text = my_data.record;	
 		
 		//устанавливаем имя в верхнюю строчку
 		objects.my_name.text=my_data.name;	
