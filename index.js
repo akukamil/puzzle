@@ -1786,7 +1786,6 @@ var auth = function() {
 				if (s.includes("vk.com")) {
 					game_platform="VK";
 					Promise.all([
-						this.loadScript('https://vk.com/js/api/xd_connection.js?2'),
 						this.loadScript('//ad.mail.ru/static/admanhtml/rbadman-html5.min.js'),
 						this.loadScript('//vk.com/js/api/adman_init.js'),
 						this.loadScript('https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js')
