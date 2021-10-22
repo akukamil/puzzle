@@ -1791,7 +1791,7 @@ var auth = function() {
 					]).then(function(){
 						help_obj.vk()
 					}).catch(function(e){
-						alert(e);
+						alert(JSON.stringify(e));
 					});
 					return;
 				}
@@ -1869,7 +1869,7 @@ var auth = function() {
 					
 				}).catch(function(e){
 					
-					alert(e);
+					alert(JSON.stringify(e));
 					
 				});
 				
