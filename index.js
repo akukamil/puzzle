@@ -1790,7 +1790,7 @@ var auth = function() {
 					]).then(function(){
 						help_obj.vk()
 					}).catch(function(e){
-						//alert(JSON.stringify(e));
+						alert(JSON.stringify(e));
 					});
 					return;
 				}
