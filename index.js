@@ -1783,7 +1783,6 @@ var auth = function() {
 				if (s.includes("vk.com")) {
 					game_platform="VK";
 					Promise.all([
-						this.loadScript('https://vk.com/js/api/xd_connection.js?2'),
 						this.loadScript('//ad.mail.ru/static/admanhtml/rbadman-html5.min.js'),
 						this.loadScript('//vk.com/js/api/adman_init.js'),
 						this.loadScript('https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js')
@@ -1791,7 +1790,7 @@ var auth = function() {
 					]).then(function(){
 						help_obj.vk()
 					}).catch(function(e){
-						alert(JSON.stringify(e));
+						//alert(JSON.stringify(e));
 					});
 					return;
 				}
@@ -1864,7 +1863,6 @@ var auth = function() {
 					my_data.uid 	= "vk"+e.id;
 					my_data.pic_url = e.photo_100;
 
-					//console.log(`Получены данные игрока от VB MINIAPP:\nимя:${my_data.name}\nid:${my_data.uid}\npic_url:${my_data.pic_url}`);
 					help_obj.process_results();		
 					
 				}).catch(function(e){
