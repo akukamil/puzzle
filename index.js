@@ -1492,8 +1492,7 @@ var game = {
 			this.last_record = Math.round(300*perc);	
 			objects.g_progress.text = this.last_record;			
 			objects.g_progress.x = objects.time_slider.width+35;
-		}
-		
+		}	
 			
 	},
 	
@@ -1580,7 +1579,7 @@ var game = {
 				my_new_record = 1;
 				
 				//записываем в файербейс
-				firebase.database().ref("players/"+my_data.uid+"/record").set(my_data.record);
+				//firebase.database().ref("players/"+my_data.uid+"/record").set(my_data.record);
 			}	
 			
 			//если новый глобальный рекорд
@@ -1624,14 +1623,14 @@ var puzzle_complete_message= {
 		//показыаем шкалу достижений
 		if (params.is_bonus_game === 1) {
 			
-			objects.game_complete_0.text="Пазл собран!";				
-			objects.game_complete_1.text="Жаль только что не побили рекорд(((";						
+			objects.game_complete_0.text=`Пазл собран!\nВаш результат ${game.last_record} баллов.`;				
+			//objects.game_complete_1.text="Жаль только что не побили рекорд(((";						
 
 			//проверяем личный новый рекорд
 			if (params.my_new_record === 1) {
 				
-				objects.game_complete_0.text="Пазл собран и вы побили свой рекорд!";				
-				objects.game_complete_1.text="А попробуйте побить рекорд игры?";		
+				objects.game_complete_0.text=`Ваш результат:\n${game.last_record} баллов!\n\nВы побили свой рекорд!\n\nМолодец!`;			
+				objects.game_complete_1.text="";		
 				
 				setTimeout(function() {
 					game_res.resources.new_record.sound.play();
@@ -1642,8 +1641,8 @@ var puzzle_complete_message= {
 			//проверяем глобальный рекорд
 			if (params.game_new_record === 1) {
 				
-				objects.game_complete_0.text="Пазл собран!";				
-				objects.game_complete_1.text="Вы побили рекорд игры!\nМолодец!";	
+				objects.game_complete_0.text=`Ваш результат:\n${game.last_record} баллов!\n\nВы побили рекорд игры!\n\nМолодец!`;				
+				objects.game_complete_1.text="";	
 				setTimeout(function() {
 					game_res.resources.new_record2.sound.play();
 					mini_message.show("Новый рекорд игры!");						
@@ -2227,7 +2226,6 @@ function init_game_env() {
             break;
 
         case "block":
-			console.log(i)
             eval(load_list[i].code1);
             break;
 
