@@ -1622,13 +1622,13 @@ var puzzle_complete_message= {
 		//показыаем шкалу достижений
 		if (params.is_bonus_game === 1) {
 			
-			objects.game_complete_0.text=`Пазл собран!\nВаш результат ${game.last_record} баллов.`;				
+			objects.game_complete_0.text=`Пазл собран!\nВаш результат:\n${game.last_record}`;				
 			//objects.game_complete_1.text="Жаль только что не побили рекорд(((";						
 
 			//проверяем личный новый рекорд
 			if (params.my_new_record === 1) {
 				
-				objects.game_complete_0.text=`Ваш результат:\n${game.last_record} баллов!\n\nВы побили свой рекорд!\n\nМолодец!`;			
+				objects.game_complete_0.text=`Ваш результат:\n${game.last_record}!\n\nВы побили свой рекорд!\n\nМолодец!`;			
 				objects.game_complete_1.text="";		
 				
 				setTimeout(function() {
@@ -1640,7 +1640,7 @@ var puzzle_complete_message= {
 			//проверяем глобальный рекорд
 			if (params.game_new_record === 1) {
 				
-				objects.game_complete_0.text=`Ваш результат:\n${game.last_record} баллов!\n\nВы побили рекорд игры!\n\nМолодец!`;				
+				objects.game_complete_0.text=`Ваш результат:\n${game.last_record}!\n\nВы побили рекорд игры!\n\nМолодец!`;				
 				objects.game_complete_1.text="";	
 				setTimeout(function() {
 					game_res.resources.new_record2.sound.play();
