@@ -637,7 +637,6 @@ var pbd = {
 						pbd.rewarded(1);
 					},
 					onClose: () => {
-						pbd.rewarded(0);
 					}, 
 					onError: (e) => {
 						pbd.rewarded(0);
