@@ -5,6 +5,7 @@ var any_dialog_active = 0, game_tick=0, game_platform="", state="", pic_changes=
 var cur_progress = -1, global_record = -1;
 
 var bonus = {3:{time:50,reward:20},4:{time:120,reward:100},5:{time:400,reward:500}}
+
 var puzzle_pic_loader = new PIXI.Loader();
 
 rnd= Math.random;
@@ -1365,7 +1366,6 @@ var game = {
 	bonus_time : 0,
 	time_result : 0,
 	start_time : 0,
-	swap_penalty: 0,
 	change_pic_on_exit: 0,
 	last_record : 0,
 	finish_params : {3 :[20,0.04], 4:[17,0.05], 5:[14,0.06]},
@@ -1410,9 +1410,30 @@ var game = {
 		objects.complete_counter.text = "Завершено: 0%";
 
 		//бонус акивирован но он может быть отменен по ходу игры
-		this.bonus_time = (puzzle.size === 3) * 25 + (puzzle.size === 4) * 150 + (puzzle.size === 5) * 400;
-		//this.swap_penalty = (puzzle.size === 3) * 30 + (puzzle.size === 4) * 100 + (puzzle.size === 5) * 300;
+		this.bonus_time = bonus[puzzle.size].time;
+			
+		if (my_data.rating >= 500 && my_data.rating < 1000)
+			this.bonus_time = bonus[puzzle.size].time*0.9;
 		
+		if (my_data.rating >= 1000 && my_data.rating < 1500)
+			this.bonus_time = bonus[puzzle.size].time*0.8;
+			
+		if (my_data.rating >= 1500 && my_data.rating < 2000)
+			this.bonus_time = bonus[puzzle.size].time*0.7;
+			
+		if (my_data.rating >= 2000 && my_data.rating < 2500)
+			this.bonus_time = bonus[puzzle.size].time*0.6;
+			
+		if (my_data.rating >= 2500 && my_data.rating < 3000)
+			this.bonus_time = bonus[puzzle.size].time*0.5;
+			
+		if (my_data.rating >= 3000 && my_data.rating < 3500)
+			this.bonus_time = bonus[puzzle.size].time*0.4;
+		
+		if (my_data.rating >= 3500 )
+			this.bonus_time = bonus[puzzle.size].time*0.3;
+		
+
 		objects.main_bcg.visible = false;
 		objects.mask_bcg.visible = true;
 		objects.mask_bcg.texture = gres['mask_bcg'+puzzle.size].texture;
@@ -1461,7 +1482,7 @@ var game = {
 		if (sec_passes > 40)
 			this.change_pic_on_exit = 1;
 		
-		let perc = 1 - sec_passes / bonus[puzzle.size].time;
+		let perc = 1 - sec_passes / this.bonus_time;
 		
 		if (perc > 0.001) {
 			objects.time_slider.scale.x =  perc;		
