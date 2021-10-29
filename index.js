@@ -178,7 +178,7 @@ class lb_player_card_class extends PIXI.Container{
 
 var puzzle = {
 	
-	size: 3,
+	size: 4,
 	cell_size:100,
 	x:25,
 	y:150,
@@ -1103,7 +1103,7 @@ var menu2= {
 		g_process=this.process;
 		
 		if (init===1) {
-			this.change_board_down(5, 0);			
+			this.change_board_down(3, 0);			
 			this.set_random_pic(0);		
 		}
 		else {
@@ -1205,8 +1205,6 @@ var menu2= {
 			return;
 		
 		
-		
-		
 		game_res.resources.click.sound.play();
 		
 
@@ -1248,11 +1246,8 @@ var menu2= {
 		if (size===puzzle.size)
 			return;
 		
+
 		
-		if (size === 5)
-			objects.puzzle_info.text='В данном режиме\nдоступна бонусная игра!'
-		else
-			objects.puzzle_info.text='Бонусная игра\nв данном режиме не доступна!'
 		
 		let old_width=objects['net_'+puzzle.size].width;
 
@@ -1260,7 +1255,7 @@ var menu2= {
 		anim.add_pos({obj: objects['net_'+puzzle.size],param: 'alpha',		vis_on_end: false,func: 'linear',val: [1,0],	speed: 0.03	});
 
 		//устанавливаем и пересчитываем параметры паззла
-		puzzle.set_size(size);	
+		puzzle.set_size(size);			
 
 		//появление новой сетки
 		//anim.add_pos({obj: objects['net_'+puzzle.size],param: 'alpha',		vis_on_end: true,func: 'linear',val: [0,1],	speed: 0.03	});
@@ -1366,9 +1361,10 @@ var game = {
 
 	start_time: 0,
 	timer : 0,
-	bonus : 1,
+	bonus_time : 0,
 	time_result : 0,
 	start_time : 0,
+	swap_penalty: 0,
 	change_pic_on_exit: 0,
 	last_record : 0,
 	finish_params : {3 :[30,0.025], 4:[25,0.03], 5:[20,0.035]},
@@ -1389,28 +1385,15 @@ var game = {
 		
 		//добавляем сетку картинки
 		anim.add_pos({obj: objects['net_'+puzzle.size],param: 'alpha',		vis_on_end: true,func: 'linear',val: [0,1],	speed: 0.03	});
-			
-			
+						
 		//добавляем кнопки
 		anim.add_pos({obj: objects.game_buttons_cont,param:	'x',vis_on_end: true,func: 'linear',val: [450,'sx'],	speed: 0.03});
-		
-				
+						
 		//добавляем прогресс 
-		if (puzzle.size === 5) {
-			
-			anim.add_pos({obj: objects.progress_cont,param: 		'x',vis_on_end: true,func: 'linear',val: [450,'sx'],	speed: 0.03	});			
-			
-			objects.my_record_point.x = 30 + my_data.record * 320 / 300;
-			objects.top_record_point.x = 30 + global_record * 320 / 300;
-			
-			objects.g_progress.text = '300';
-			
-			objects.time_slider.scale.x = 1;
-			
-			
-			
-		}
-
+		anim.add_pos({obj: objects.progress_cont,param: 'x',vis_on_end: true,func: 'linear',val: [450,'sx'],	speed: 0.03	});		
+		objects.g_progress.text = '100';		
+		objects.time_slider.scale.x = 1;
+		
 		this.change_pic_on_exit = 0;
 			
 		//фиксируем начало игры
@@ -1418,23 +1401,21 @@ var game = {
 	
 		//утсанавливаем процессинговую функцию
 		g_process=function(){game.process()};			
-		
-		
+				
 		//показываем сколько подсказок есть
 		objects.hint_button_text.text=puzzle.hints_amount;
-
 	
 		//устанавливаем начальные значения завершенных паззлов
 		objects.complete_counter.text = "Завершено: 0%";
 
 		//бонус акивирован но он может быть отменен по ходу игры
-		this.bonus = 1;
+		this.bonus_time = (puzzle.size === 3) * 25 + (puzzle.size === 4) * 150 + (puzzle.size === 5) * 400;
+		//this.swap_penalty = (puzzle.size === 3) * 30 + (puzzle.size === 4) * 100 + (puzzle.size === 5) * 300;
 		
 		objects.main_bcg.visible = false;
 		objects.mask_bcg.visible = true;
 		objects.mask_bcg.texture = gres['mask_bcg'+puzzle.size].texture;
 				
-
 	},
 		
 	back_button_down: function() {
@@ -1471,9 +1452,6 @@ var game = {
 	
 	process : function () {
 		
-		//показыаем прогресс только для картинки 5х5
-		if (puzzle.size !== 5)
-			return;
 		
 
 		//вычисляем прогресс
@@ -1482,13 +1460,11 @@ var game = {
 		if (sec_passes > 40)
 			this.change_pic_on_exit = 1;
 		
-		let perc = 1 - sec_passes / 300;
-
-
+		let perc = 1 - sec_passes / this.bonus_time;
 		
 		if (perc > 0.001) {
 			objects.time_slider.scale.x =  perc;		
-			this.last_record = Math.round(300*perc);	
+			this.last_record = Math.round(100*perc);	
 			objects.g_progress.text = this.last_record;			
 			objects.g_progress.x = objects.time_slider.width+35;
 		}	
@@ -1534,10 +1510,12 @@ var game = {
 		{
 								
 			//анализируем результаты игры
-			let res_data = this.process_game_results();
+			//let res_data = this.process_game_results();
+			
+			this.last_record += puzzle.size;
 			
 			//показываем сообщение
-			puzzle_complete_message.show(res_data);					
+			puzzle_complete_message.show(this.last_record);					
 			
 			//делаем звук
 			game_res.resources.win.sound.play();
@@ -1550,6 +1528,9 @@ var game = {
 		
 			activity_on=0;		
 		}		
+
+
+
 
 		//обрабатываем кручение задней картинки
 		puzzle_complete_message.process();
@@ -1597,7 +1578,7 @@ var game = {
 		
 	made_a_swap : function () {
 		
-		this.start_time -= 3; 
+		this.start_time -= 0.25; 
 		
 	},
 	
@@ -1617,50 +1598,18 @@ var game = {
 
 var puzzle_complete_message= {
 	
-	show : function(params = {my_new_record :0, game_new_record:0, is_bonus_game :0}) {
+	show : function(result) {
 								
-		//показыаем шкалу достижений
-		if (params.is_bonus_game === 1) {
+				
 			
-			objects.game_complete_0.text=`Пазл собран!\nВаш результат:\n${game.last_record}`;				
-			//objects.game_complete_1.text="Жаль только что не побили рекорд(((";						
+		objects.game_complete_0.text="Пазл собран!!!";	
+		objects.game_complete_1.text= "Заработанно баллов: " + result;	
 
-			//проверяем личный новый рекорд
-			if (params.my_new_record === 1) {
-				
-				objects.game_complete_0.text=`Ваш результат:\n${game.last_record}!\n\nВы побили свой рекорд!\n\nМолодец!`;			
-				objects.game_complete_1.text="";		
-				
-				setTimeout(function() {
-					game_res.resources.new_record.sound.play();
-					mini_message.show("Новый личный рекорд!");						
-				},700)
-			}
-			
-			//проверяем глобальный рекорд
-			if (params.game_new_record === 1) {
-				
-				objects.game_complete_0.text=`Ваш результат:\n${game.last_record}!\n\nВы побили рекорд игры!\n\nМолодец!`;				
-				objects.game_complete_1.text="";	
-				setTimeout(function() {
-					game_res.resources.new_record2.sound.play();
-					mini_message.show("Новый рекорд игры!");						
-				},1500)
-			}							
-			
-		}
-				
-		if (params.is_bonus_game === 0) {
-			
-						
-			objects.game_complete_0.text="";	
-			objects.game_complete_1.text="Пазл собран!!!";	
-		}
-				
+
 		
 		
 		//добавляем дополнение к радуге если новые рекорды
-		if (params.my_new_record === 1 || params.game_new_record === 1) {			
+		if (result > 0) {			
 			anim2.add(objects.rainbow2,{
 				rotation:[0,1.2],
 				alpha:[0,1]
@@ -1670,10 +1619,13 @@ var puzzle_complete_message= {
 			anim.add_scl({obj: objects.rainbow2,param: 'y',vis_on_end: true,func: 'easeOutBack',val: [0,1],	speed: 0.003});			
 		}
 
+		my_data.record += result;
 
 		//записываем событие
 		firebase.database().ref("players/"+my_data.uid+"/tm").set(firebase.database.ServerValue.TIMESTAMP);
-				
+		firebase.database().ref("players/"+my_data.uid+"/record").set(my_data.record);
+		
+		
 		anim.add_pos({obj: objects.game_complete_cont,param: 'x',		vis_on_end: true,func: 'easeOutBack',val: [-500,'sx'],	speed: 0.03	});
 		anim.add_pos({obj: objects.rainbow,param: 'alpha',		vis_on_end: true,func: 'linear',val: [0,1],	speed: 0.03	});
 		
