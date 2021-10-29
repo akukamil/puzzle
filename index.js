@@ -4,7 +4,8 @@ var g_process = () => {};
 var any_dialog_active = 0, game_tick=0, game_platform="", state="", pic_changes=10, activity_on=1;
 var cur_progress = -1, global_record = -1;
 
-var puzzle_pic_loader=new PIXI.Loader();
+var bonus = {3:{time:50,reward:20},4:{time:120,reward:100},5:{time:400,reward:500}}
+var puzzle_pic_loader = new PIXI.Loader();
 
 rnd= Math.random;
 rnd2= function(min,max) {	
@@ -1367,7 +1368,7 @@ var game = {
 	swap_penalty: 0,
 	change_pic_on_exit: 0,
 	last_record : 0,
-	finish_params : {3 :[30,0.025], 4:[25,0.03], 5:[20,0.035]},
+	finish_params : {3 :[20,0.04], 4:[17,0.05], 5:[14,0.06]},
     process: function () {},
 
     activate: function () {
@@ -1460,11 +1461,11 @@ var game = {
 		if (sec_passes > 40)
 			this.change_pic_on_exit = 1;
 		
-		let perc = 1 - sec_passes / this.bonus_time;
+		let perc = 1 - sec_passes / bonus[puzzle.size].time;
 		
 		if (perc > 0.001) {
 			objects.time_slider.scale.x =  perc;		
-			this.last_record = Math.round(100*perc);	
+			this.last_record = Math.round(bonus[puzzle.size].reward*perc);	
 			objects.g_progress.text = this.last_record;			
 			objects.g_progress.x = objects.time_slider.width+35;
 		}	
