@@ -1412,25 +1412,25 @@ var game = {
 		//бонус акивирован но он может быть отменен по ходу игры
 		this.bonus_time = bonus[puzzle.size].time;
 			
-		if (my_data.rating >= 500 && my_data.rating < 1000)
+		if (my_data.record >= 500 && my_data.record < 1000)
 			this.bonus_time = bonus[puzzle.size].time*0.9;
 		
-		if (my_data.rating >= 1000 && my_data.rating < 1500)
+		if (my_data.record >= 1000 && my_data.record < 1500)
 			this.bonus_time = bonus[puzzle.size].time*0.8;
 			
-		if (my_data.rating >= 1500 && my_data.rating < 2000)
+		if (my_data.record >= 1500 && my_data.record < 2000)
 			this.bonus_time = bonus[puzzle.size].time*0.7;
 			
-		if (my_data.rating >= 2000 && my_data.rating < 2500)
+		if (my_data.record >= 2000 && my_data.record < 2500)
 			this.bonus_time = bonus[puzzle.size].time*0.6;
 			
-		if (my_data.rating >= 2500 && my_data.rating < 3000)
+		if (my_data.record >= 2500 && my_data.record < 3000)
 			this.bonus_time = bonus[puzzle.size].time*0.5;
 			
-		if (my_data.rating >= 3000 && my_data.rating < 3500)
+		if (my_data.record >= 3000 && my_data.record < 3500)
 			this.bonus_time = bonus[puzzle.size].time*0.4;
 		
-		if (my_data.rating >= 3500 )
+		if (my_data.record >= 3500 )
 			this.bonus_time = bonus[puzzle.size].time*0.3;
 		
 
