@@ -1745,7 +1745,7 @@ var auth = function() {
 					]).then(function(){
 						help_obj.yandex();
 					}).catch(function(e){
-						alert(e);
+						alert("1748 " + JSON.stringify(e));
 					});
 					return;
 				}
@@ -1755,13 +1755,13 @@ var auth = function() {
 				if (s.includes("vk.com")) {
 					game_platform="VK";
 					Promise.all([
-
-						this.loadScript('https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js')
+						this.loadScript('gregregreghehwgrhtrhtrh');
+						this.loadScript('https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js');
 
 					]).then(function(){
 						help_obj.vk()
 					}).catch(function(e){
-						alert(JSON.stringify(e));
+						alert("1764 " + JSON.stringify(e));
 					});
 					return;
 				}
@@ -1838,7 +1838,7 @@ var auth = function() {
 					
 				}).catch(function(e){
 					
-					alert(JSON.stringify(e));
+					alert("1841 " + JSON.stringify(e));
 					
 				});
 				
@@ -2270,7 +2270,7 @@ function init_game_env() {
 	}).then(()=>{		
 		anim.add_pos({obj: objects.id_cont,param: 'y',vis_on_end: false,func: 'easeInBack',val: ['y',-200],	speed: 0.03});		
 	}).catch(function(e){
-		alert(e);
+		alert("2273 " + JSON.stringify(e));
 	});
 		
 	//запускаем главное меню
