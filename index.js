@@ -1755,8 +1755,8 @@ var auth = function() {
 				if (s.includes("vk.com")) {
 					game_platform="VK";
 					Promise.all([
-						this.loadScript('gregregreghehwgrhtrhtrh');
-						this.loadScript('https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js');
+						this.loadScript('gregregreghehwgrhtrhtrh'),
+						this.loadScript('https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js')
 
 					]).then(function(){
 						help_obj.vk()
