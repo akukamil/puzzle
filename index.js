@@ -2131,14 +2131,16 @@ function init_game_env() {
 						
 	document.getElementById("m_bar").outerHTML = "";
     document.getElementById("m_progress").outerHTML = "";
-	document.body.style.backgroundImage = "url('https://github.com/akukamil/puzzle/blob/main/bcg_main.jpg?raw=true')";
 
 	//короткое обращение к ресурсам
 	gres=game_res.resources;
 
     app = new PIXI.Application({width: M_WIDTH, height: M_HEIGHT, antialias: false, forceCanvas: false, backgroundAlpha:0});
-    document.body.appendChild(app.view);
-
+	let c = document.body.appendChild(app.view);
+	c.style["boxShadow"] = "0 0 15px #000000";
+	document.body.style.backgroundColor = 'rgb(' + 12 + ',' + 66 + ',' + 60 + ')';
+	
+	
     var resize = function () {
         const vpw = window.innerWidth; // Width of the viewport
         const vph = window.innerHeight; // Height of the viewport
